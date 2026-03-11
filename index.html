@@ -1,0 +1,1903 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Анализ отштампованных деталей</title>
+<style>
+:root {
+--bg-color: #f5f5f5;
+--container-bg: white;
+--text-color: #333;
+--header-bg: #4CAF50;
+--header-text: white;
+--table-header-bg: #4CAF50;
+--even-row-bg: #f9f9f9;
+--hover-row-bg: #f5f5f5;
+--summary-bg: #e8f5e9;
+--summary-item-bg: white;
+--border-color: #ddd;
+--input-border: #ddd;
+--input-bg: white;
+--button-hover: #45a049;
+--error-bg: #ffebee;
+--error-text: #f44336;
+--warning-bg: #fff59d;
+--warehouse-bg: #e3f2fd;
+--total-bg: #f1f8e9;
+--sheets-bg: #fff3e0;
+--sheets-btn-bg: #ff9800;
+--sheets-btn-hover: #f57c00;
+--export-btn-bg: #2196F3;
+--export-btn-hover: #1976D2;
+--filter-bg: #f8f9fa;
+--center-bg: #e8f5fe;
+--close-btn-bg: #f44336;
+--close-btn-hover: #d32f2f;
+--spinner-border: #f3f3f3;
+--spinner-top: #4CAF50;
+--dropdown-bg: white;
+--dropdown-shadow: rgba(0,0,0,0.1);
+--select-all-bg: #4CAF50;
+--select-all-hover: #45a049;
+--deselect-bg: #f44336;
+--deselect-hover: #d32f2f;
+--filter-text: #333;
+--warehouse-text: #333;
+--total-text: #333;
+--center-text: #333;
+}
+.dark-theme {
+--bg-color: #121212;
+--container-bg: #1e1e1e;
+--text-color: #e0e0e0;
+--header-bg: #2e7d32;
+--header-text: #ffffff;
+--table-header-bg: #2e7d32;
+--even-row-bg: #252525;
+--hover-row-bg: #2a2a2a;
+--summary-bg: #1b5e20;
+--summary-item-bg: #252525;
+--border-color: #444;
+--input-border: #444;
+--input-bg: #2d2d2d;
+--button-hover: #256325;
+--error-bg: #441a1a;
+--error-text: #ef9a9a;
+--warning-bg: #795548;
+--warehouse-bg: #1565c0;
+--total-bg: #388e3c;
+--sheets-bg: #f57c00;
+--sheets-btn-bg: #ff9800;
+--sheets-btn-hover: #ffb74d;
+--export-btn-bg: #1976D2;
+--export-btn-hover: #1565c0;
+--filter-bg: #252525;
+--center-bg: #1565c0;
+--close-btn-bg: #d32f2f;
+--close-btn-hover: #c62828;
+--spinner-border: #333;
+--spinner-top: #66bb6a;
+--dropdown-bg: #252525;
+--dropdown-shadow: rgba(0,0,0,0.5);
+--select-all-bg: #2e7d32;
+--select-all-hover: #256325;
+--deselect-bg: #d32f2f;
+--deselect-hover: #c62828;
+--filter-text: #e0e0e0;
+--warehouse-text: white;
+--total-text: white;
+--center-text: white;
+}
+body {
+font-family: Arial, sans-serif;
+max-width: 1400px;
+margin: 0 auto;
+padding: 20px;
+background-color: var(--bg-color);
+color: var(--text-color);
+transition: background-color 0.3s, color 0.3s;
+}
+.container {
+background-color: var(--container-bg);
+padding: 20px;
+border-radius: 8px;
+box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+position: relative;
+transition: background-color 0.3s;
+}
+/* Стили для шапки как в React */
+.header-controls {
+display: flex;
+justify-content: space-between;
+align-items: flex-start;
+margin-bottom: 15px;
+gap: 15px;
+flex-wrap: wrap;
+}
+.header-left {
+display: flex;
+gap: 10px;
+flex-wrap: wrap;
+flex: 1;
+}
+/* Контейнер для кнопки загрузки на всю ширину */
+.upload-container {
+flex: 1;
+min-width: 0;
+display: flex;
+flex-direction: column;
+gap: 5px;
+}
+/* Кнопка выбора файла на всю ширину */
+.upload-header-btn {
+background-color: var(--header-bg);
+color: white;
+border: none;
+padding: 8px 16px;
+border-radius: 20px;
+cursor: pointer;
+font-size: 14px;
+font-weight: 500;
+transition: all 0.3s;
+height: 36px;
+white-space: nowrap;
+display: flex;
+align-items: center;
+justify-content: center;
+width: 100%;
+min-width: 200px;
+}
+.upload-header-btn:hover {
+background-color: var(--button-hover);
+}
+/* Кнопка экспорта в шапке */
+.export-header-btn {
+background-color: var(--export-btn-bg);
+color: white;
+border: none;
+padding: 8px 16px;
+border-radius: 20px;
+cursor: pointer;
+font-size: 14px;
+font-weight: 500;
+transition: all 0.3s;
+height: 36px;
+white-space: nowrap;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+}
+.export-header-btn:hover {
+background-color: var(--export-btn-hover);
+}
+/* Кнопка темы */
+.theme-toggle-header {
+background: none;
+border: none;
+color: var(--text-color);
+width: 36px;
+height: 36px;
+border-radius: 50%;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 16px;
+transition: all 0.3s;
+background-color: var(--input-bg);
+border: 1px solid var(--border-color);
+flex-shrink: 0;
+}
+.theme-toggle-header:hover {
+background-color: rgba(0,0,0,0.05);
+}
+.dark-theme .theme-toggle-header:hover {
+background-color: rgba(255,255,255,0.1);
+}
+/* Заголовок */
+.main-title {
+color: var(--header-text);
+background-color: var(--header-bg);
+padding: 10px 15px;
+border-radius: 6px;
+text-align: center;
+margin: 0 0 15px 0;
+font-size: 20px;
+font-weight: bold;
+transition: background-color 0.3s, color 0.3s;
+}
+/* Информация о загруженном файле */
+.file-info {
+margin-top: 5px;
+font-size: 13px;
+color: var(--text-color);
+padding: 4px 8px;
+border-radius: 4px;
+background-color: var(--filter-bg);
+display: none;
+}
+/* Summary - перемещено выше */
+.summary {
+background-color: var(--summary-bg);
+padding: 15px;
+border-radius: 5px;
+margin: 0 0 20px 0;
+display: none;
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+gap: 12px;
+transition: background-color 0.3s;
+}
+.summary-item {
+background-color: var(--summary-item-bg);
+padding: 12px;
+border-radius: 5px;
+box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+transition: background-color 0.3s;
+}
+.summary-item h4 {
+margin-top: 0;
+color: var(--text-color);
+border-bottom: 2px solid var(--header-bg);
+padding-bottom: 4px;
+transition: color 0.3s, border-color 0.3s;
+font-size: 14px;
+margin-bottom: 8px;
+}
+.summary-value {
+font-size: 20px;
+font-weight: bold;
+color: var(--header-bg);
+margin: 6px 0;
+transition: color 0.3s;
+}
+.results-section {
+margin-top: 0;
+overflow-x: auto;
+}
+.results-table {
+width: 100%;
+border-collapse: separate;
+border-spacing: 0;
+margin-top: 15px;
+display: none;
+min-width: 900px;
+color: var(--text-color);
+font-size: 13px;
+}
+.results-table th, .results-table td {
+position: relative;
+border: 1px solid var(--border-color);
+}
+.results-table th {
+background-color: var(--table-header-bg);
+color: var(--header-text);
+padding: 0 !important;
+text-align: left;
+position: sticky;
+top: 0 !important;
+transition: background-color 0.3s, color 0.3s;
+font-weight: bold;
+font-size: 13px;
+line-height: 1.2;
+z-index: 20;
+box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+vertical-align: middle !important;
+height: 50px;
+}
+.results-table td {
+padding: 6px 8px;
+border-bottom: 1px solid var(--border-color);
+font-size: 13px;
+line-height: 1.2;
+}
+.results-table tr:hover {
+background-color: var(--hover-row-bg);
+}
+.results-table tr:nth-child(even) {
+background-color: var(--even-row-bg);
+}
+.loading {
+display: none;
+text-align: center;
+margin: 15px 0;
+}
+.spinner {
+border: 4px solid var(--spinner-border);
+border-top: 4px solid var(--spinner-top);
+border-radius: 50%;
+width: 40px;
+height: 40px;
+animation: spin 1s linear infinite;
+margin: 0 auto;
+transition: border-color 0.3s;
+}
+@keyframes spin {
+0% { transform: rotate(0deg); }
+100% { transform: rotate(360deg); }
+}
+.error {
+color: var(--error-text);
+background-color: var(--error-bg);
+padding: 12px;
+border-radius: 5px;
+margin: 15px 0;
+display: none;
+transition: background-color 0.3s, color 0.3s;
+font-size: 14px;
+}
+.column-header {
+position: relative;
+height: 100%;
+}
+.header-content-wrapper {
+position: relative;
+padding: 8px 25px 8px 10px !important;
+height: 100%;
+display: flex;
+flex-direction: column;
+justify-content: center;
+min-height: 50px;
+box-sizing: border-box;
+}
+.filter-btn {
+position: absolute !important;
+right: 5px !important;
+top: 50% !important;
+transform: translateY(-50%) !important;
+margin: 0 !important;
+padding: 0 !important;
+width: 18px !important;
+height: 18px !important;
+display: flex !important;
+align-items: center !important;
+justify-content: center !important;
+font-size: 10px !important;
+background: none !important;
+border: none !important;
+color: inherit !important;
+cursor: pointer !important;
+z-index: 5 !important;
+}
+.column-tooltip {
+font-size: 11px;
+font-weight: normal;
+opacity: 0.9;
+display: block;
+margin-top: 3px;
+color: var(--text-color);
+line-height: 1.1;
+}
+.warehouse-cell {
+background-color: var(--warehouse-bg);
+font-weight: bold;
+color: var(--warehouse-text);
+}
+.total-cell {
+background-color: var(--total-bg);
+font-weight: bold;
+color: var(--total-text);
+}
+.sheets-cell {
+background-color: var(--sheets-bg);
+position: relative;
+}
+.spoiler-btn {
+background-color: var(--sheets-btn-bg);
+color: white;
+border: none;
+padding: 3px 8px;
+border-radius: 3px;
+cursor: pointer;
+font-size: 11px;
+margin-left: 8px;
+transition: background-color 0.3s;
+}
+.spoiler-btn:hover {
+background-color: var(--sheets-btn-hover);
+}
+/* Старый вариант выпадающего списка */
+.sheets-list {
+display: none;
+position: absolute;
+top: 100%;
+left: 0;
+right: 0;
+background-color: var(--container-bg);
+border: 1px solid var(--border-color);
+border-radius: 4px;
+padding: 8px;
+box-shadow: 0 4px 8px var(--dropdown-shadow);
+z-index: 100;
+max-height: 250px;
+overflow-y: auto;
+margin-top: 4px;
+font-size: 12px;
+}
+.sheets-list.show {
+display: block;
+}
+.sheet-item {
+padding: 4px 0;
+border-bottom: 1px solid var(--border-color);
+font-size: 12px;
+color: var(--text-color);
+line-height: 1.2;
+}
+.sheet-item:last-child {
+border-bottom: none;
+}
+/* Стиль для итоговой строки в модальном окне */
+.sheet-total {
+font-weight: bold;
+margin-top: 5px;
+padding-top: 5px;
+border-top: 1px solid var(--border-color);
+}
+/* Кнопка "Развернуть" внутри списка */
+.expand-sheets-btn {
+background-color: #2196F3;
+color: white;
+border: none;
+padding: 4px 8px;
+border-radius: 3px;
+cursor: pointer;
+font-size: 11px;
+margin-top: 8px;
+transition: background-color 0.3s;
+display: block;
+width: 100%;
+text-align: center;
+}
+.expand-sheets-btn:hover {
+background-color: #1976D2;
+}
+/* Модальное окно для полноэкранного просмотра */
+.full-sheets-modal {
+display: none;
+position: fixed;
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+background-color: var(--container-bg);
+border: 2px solid var(--border-color);
+border-radius: 8px;
+padding: 20px;
+box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+z-index: 2000;
+width: 80%;
+max-width: 800px;
+max-height: 80vh;
+overflow-y: auto;
+font-size: 13px;
+}
+.full-sheets-modal.show {
+display: block;
+}
+.full-sheets-modal .close-full-modal {
+background-color: var(--close-btn-bg);
+color: white;
+border: none;
+padding: 8px 16px;
+border-radius: 4px;
+cursor: pointer;
+font-size: 13px;
+margin-top: 15px;
+transition: background-color 0.3s;
+display: block;
+width: 100%;
+}
+.full-sheets-modal .close-full-modal:hover {
+background-color: var(--close-btn-hover);
+}
+/* Затемнение фона при открытом модальном окне */
+.sheets-overlay {
+display: none;
+position: fixed;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background-color: rgba(0, 0, 0, 0.5);
+z-index: 1500;
+}
+.sheets-overlay.show {
+display: block;
+}
+.filter-dropdown {
+position: absolute;
+background: var(--dropdown-bg);
+border: 1px solid var(--border-color);
+box-shadow: 0 2px 10px var(--dropdown-shadow);
+padding: 8px;
+z-index: 1000;
+width: 200px;
+max-height: 250px;
+overflow-y: auto;
+display: none;
+top: 100% !important;
+left: 0 !important;
+color: var(--filter-text);
+font-size: 12px;
+}
+.filter-item {
+margin: 3px 0;
+display: flex;
+align-items: center;
+}
+.filter-item input {
+margin-right: 6px;
+}
+.filter-item label {
+color: var(--filter-text);
+cursor: pointer;
+font-size: 12px;
+}
+.select-all-btn {
+display: block;
+width: 100%;
+padding: 4px;
+background-color: var(--select-all-bg);
+color: white;
+border: none;
+cursor: pointer;
+border-radius: 3px;
+font-size: 12px;
+text-align: center;
+}
+.select-all-btn:hover {
+background-color: var(--select-all-hover);
+}
+.select-all-btn.deselect {
+background-color: var(--deselect-bg);
+}
+.select-all-btn.deselect:hover {
+background-color: var(--deselect-hover);
+}
+#totalRow {
+font-weight: bold;
+}
+.dark-theme #totalRow td {
+border-color: #555;
+}
+/* Стили для поиска в фильтре */
+.filter-search-container {
+margin-bottom: 8px;
+}
+.filter-search-input {
+width: 100%;
+padding: 5px 8px;
+border: 1px solid var(--input-border);
+border-radius: 4px;
+background-color: var(--input-bg);
+color: var(--text-color);
+box-sizing: border-box;
+font-size: 12px;
+}
+.filter-search-input:focus {
+outline: none;
+border-color: var(--header-bg);
+}
+/* Контейнер для таблицы с фиксированной высотой и прокруткой */
+.table-container {
+max-height: 550px;
+overflow-y: auto;
+border: 1px solid var(--border-color);
+border-radius: 5px;
+margin-top: 0;
+position: relative;
+}
+/* Делаем шапку таблицы всегда видимой при прокрутке */
+.table-container thead th {
+position: sticky;
+top: 0;
+z-index: 20;
+background-color: var(--table-header-bg) !important;
+}
+/* Уменьшаем вертикальные отступы в заголовках столбцов */
+.results-table th .column-tooltip {
+margin-top: 2px;
+line-height: 1.1;
+}
+/* Уменьшаем высоту строк в таблице */
+.results-table tbody tr {
+height: 32px;
+}
+/* Делаем таблицу более компактной */
+.results-table td {
+padding: 5px 8px;
+}
+/* Уменьшаем отступы в summary */
+.summary-item p {
+margin: 3px 0 0 0;
+font-size: 12px;
+}
+/* Стили для кнопок в React-дизайне */
+.react-btn {
+border: none;
+cursor: pointer;
+font-size: 14px;
+font-weight: 500;
+border-radius: 20px;
+transition: all 0.3s;
+padding: 8px 16px;
+height: 36px;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+white-space: nowrap;
+}
+.react-btn.primary {
+background-color: var(--header-bg);
+color: white;
+}
+.react-btn.primary:hover {
+background-color: var(--button-hover);
+}
+.react-btn.secondary {
+background-color: var(--export-btn-bg);
+color: white;
+}
+.react-btn.secondary:hover {
+background-color: var(--export-btn-hover);
+}
+/* Стили для индикатора загрузки как в React */
+.react-loading {
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+margin: 20px 0;
+}
+.react-spinner {
+animation: spin 1s linear infinite;
+border-radius: 50%;
+height: 32px;
+width: 32px;
+border: 3px solid var(--spinner-border);
+border-top: 3px solid var(--spinner-top);
+}
+/* Адаптивность */
+@media (max-width: 768px) {
+.header-controls {
+flex-direction: column;
+gap: 10px;
+}
+.header-left {
+width: 100%;
+flex-direction: column;
+}
+.upload-container {
+width: 100%;
+}
+.main-title {
+font-size: 18px;
+padding: 8px 12px;
+}
+.summary {
+grid-template-columns: repeat(2, 1fr);
+}
+.table-container {
+max-height: 400px;
+}
+.full-sheets-modal {
+width: 95%;
+max-width: 95%;
+padding: 15px;
+}
+}
+@media (max-width: 480px) {
+.summary {
+grid-template-columns: 1fr;
+}
+body {
+padding: 10px;
+}
+.container {
+padding: 15px;
+}
+.full-sheets-modal {
+width: 98%;
+max-width: 98%;
+padding: 10px;
+}
+}
+/* Для темной темы */
+.dark-theme .filter-btn {
+color: var(--header-text) !important;
+}
+
+/* НОВЫЕ СТИЛИ для центрирования кнопки по правому краю */
+.sheets-cell-content {
+display: flex;
+justify-content: space-between;
+align-items: center;
+width: 100%;
+height: 100%;
+position: relative;
+}
+.sheets-count-container {
+display: flex;
+align-items: center;
+}
+.sheets-count {
+min-width: 30px;
+text-align: center;
+display: inline-block;
+}
+.sheets-btn-container {
+display: flex;
+justify-content: flex-end;
+flex: 1;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<!-- Шапка как в React -->
+<div class="header-controls">
+<div class="header-left">
+<button id="exportHeaderBtn" class="export-header-btn">
+Экспорт в Excel
+</button>
+<div class="upload-container">
+<button id="uploadHeaderBtn" class="upload-header-btn">
+Перетащите Excel файл или нажмите, чтобы выбрать
+</button>
+<div id="fileName" class="file-info"></div>
+</div>
+</div>
+<button class="theme-toggle-header" id="themeToggleHeader">
+🌙
+</button>
+</div>
+<h1 class="main-title">Анализ отштампованных деталей</h1>
+<!-- Summary - теперь сразу под заголовком -->
+<div class="summary" id="summary">
+<div class="summary-item">
+<h4>Всего номенклатур</h4>
+<div class="summary-value" id="totalItems">0</div>
+<p>Уникальных наименований</p>
+</div>
+<div class="summary-item">
+<h4>Отштамповано всего</h4>
+<div class="summary-value" id="totalQuantity">0</div>
+<p>Общее количество деталей</p>
+</div>
+<div class="summary-item">
+<h4>Склад всего</h4>
+<div class="summary-value" id="totalWarehouse">0</div>
+<p>Сумма по столбцу S</p>
+</div>
+<div class="summary-item">
+<h4>Обработано листов</h4>
+<div class="summary-value" id="totalSheets">0</div>
+<p>Количество листов с данными</p>
+</div>
+</div>
+<!-- Индикатор загрузки -->
+<div class="loading" id="loading">
+<div class="spinner"></div>
+<p>Обработка файла...</p>
+</div>
+<!-- Сообщение об ошибке -->
+<div class="error" id="error"></div>
+<!-- Результаты -->
+<div class="results-section">
+<!-- Контейнер для таблицы с фиксированной шапкой -->
+<div class="table-container" id="tableContainer">
+<table class="results-table" id="resultsTable">
+<thead>
+<tr>
+<th class="column-header" style="min-width: 220px;">
+<div class="header-content-wrapper">
+<div style="line-height: 1.1;">
+Номенклатура
+<span class="column-tooltip">Столбец I</span>
+</div>
+<button class="filter-btn" data-target="filter-dropdown-name">▼</button>
+</div>
+<div class="filter-dropdown" id="filter-dropdown-name">
+<button class="select-all-btn" id="select-all-name">Выбрать все</button>
+<div class="filter-search-container">
+<input type="text" id="searchInput" class="filter-search-input" placeholder="Поиск по номенклатуре...">
+</div>
+<div id="filter-items-container-name"></div>
+</div>
+</th>
+<th class="column-header">
+<div class="header-content-wrapper">
+<div style="line-height: 1.1;">
+Отштамповано
+<span class="column-tooltip">Сумма столбца O</span>
+</div>
+</div>
+</th>
+<th class="column-header">
+<div class="header-content-wrapper">
+<div style="line-height: 1.1;">
+Склад
+<span class="column-tooltip">Сумма столбца S</span>
+</div>
+</div>
+</th>
+<th class="column-header">
+<div class="header-content-wrapper">
+<div style="line-height: 1.1;">
+Листы
+<span class="column-tooltip">Кнопка показывает список листов</span>
+</div>
+</div>
+</th>
+<th class="column-header" style="min-width: 150px;">
+<div class="header-content-wrapper">
+<div style="line-height: 1.1;">
+Рабочий центр
+<span class="column-tooltip">Столбец B</span>
+</div>
+<button class="filter-btn" data-target="filter-dropdown-center">▼</button>
+</div>
+<div class="filter-dropdown" id="filter-dropdown-center">
+<button class="select-all-btn" id="select-all-center">Выбрать все</button>
+<div id="filter-items-container-center"></div>
+</div>
+</th>
+</tr>
+</thead>
+<tbody id="resultsBody">
+<!-- Данные будут загружены здесь -->
+</tbody>
+<tfoot>
+<tr id="totalRow" style="display: none;">
+<td style="font-weight: bold; background-color: var(--hover-row-bg);">ИТОГО:</td>
+<td class="total-cell" id="grandTotalQuantity">0</td>
+<td class="warehouse-cell" id="grandTotalWarehouse">0</td>
+<td class="sheets-cell" id="grandTotalSheets">
+    <div class="sheets-cell-content">
+        <div class="sheets-count-container">
+            <span class="sheets-count">0</span>
+        </div>
+        <div class="sheets-btn-container">
+            <!-- Пусто - кнопки нет -->
+        </div>
+    </div>
+</td>
+<td></td>
+</tr>
+</tfoot>
+</table>
+</div>
+</div>
+</div>
+<!-- Затемнение фона для полноэкранных окон -->
+<div class="sheets-overlay" id="sheetsOverlay"></div>
+<!-- Подключаем библиотеку SheetJS для работы с Excel -->
+<script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+// Элементы DOM
+const themeToggleHeader = document.getElementById('themeToggleHeader');
+const uploadHeaderBtn = document.getElementById('uploadHeaderBtn');
+const exportHeaderBtn = document.getElementById('exportHeaderBtn');
+const fileInput = document.createElement('input');
+fileInput.type = 'file';
+fileInput.className = 'file-input';
+fileInput.accept = '.xlsx, .xls';
+fileInput.style.display = 'none';
+document.body.appendChild(fileInput);
+const fileName = document.getElementById('fileName');
+const loading = document.getElementById('loading');
+const error = document.getElementById('error');
+const resultsTable = document.getElementById('resultsTable');
+const resultsBody = document.getElementById('resultsBody');
+const summary = document.getElementById('summary');
+const totalItems = document.getElementById('totalItems');
+const totalQuantity = document.getElementById('totalQuantity');
+const totalWarehouse = document.getElementById('totalWarehouse');
+const totalSheets = document.getElementById('totalSheets');
+const totalRow = document.getElementById('totalRow');
+const grandTotalQuantity = document.getElementById('grandTotalQuantity');
+const grandTotalWarehouse = document.getElementById('grandTotalWarehouse');
+const grandTotalSheetsCount = document.querySelector('#grandTotalSheets .sheets-count');
+const searchInput = document.getElementById('searchInput');
+const filterItemsContainerName = document.getElementById('filter-items-container-name');
+const filterItemsContainerCenter = document.getElementById('filter-items-container-center');
+const selectAllNameBtn = document.getElementById('select-all-name');
+const selectAllCenterBtn = document.getElementById('select-all-center');
+const tableContainer = document.getElementById('tableContainer');
+const sheetsOverlay = document.getElementById('sheetsOverlay');
+// Переменные состояния
+let currentData = [];
+let sheetNamesList = [];
+// Для фильтров
+let allNameValues = [];
+let allCenterValues = [];
+// Активные фильтры - хранят выбранные значения
+let activeNameFilters = new Set();
+let activeCenterFilters = new Set();
+
+// === Функции для работы с темой ===
+const body = document.body;
+
+function getSystemThemePreference() {
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark';
+    }
+    return 'light';
+}
+
+function setTheme(theme) {
+    if (theme === 'dark') {
+        body.classList.add('dark-theme');
+        themeToggleHeader.textContent = '☀️';
+        localStorage.setItem('theme', 'dark');
+    } else {
+        body.classList.remove('dark-theme');
+        themeToggleHeader.textContent = '🌙';
+        localStorage.setItem('theme', 'light');
+    }
+}
+
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    const systemTheme = getSystemThemePreference();
+    
+    if (savedTheme) {
+        setTheme(savedTheme);
+    } else {
+        setTheme(systemTheme);
+    }
+}
+
+initTheme();
+
+themeToggleHeader.addEventListener('click', function() {
+    if (body.classList.contains('dark-theme')) {
+        setTheme('light');
+    } else {
+        setTheme('dark');
+    }
+});
+
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+    const savedTheme = localStorage.getItem('theme');
+    if (!savedTheme) {
+        const newTheme = e.matches ? 'dark' : 'light';
+        setTheme(newTheme);
+    }
+});
+
+// Обработчики кнопок
+uploadHeaderBtn.addEventListener('click', function() {
+fileInput.click();
+});
+exportHeaderBtn.addEventListener('click', function() {
+exportToExcel();
+});
+fileInput.addEventListener('change', function(e) {
+if (e.target.files.length > 0) {
+uploadHeaderBtn.textContent = 'Выбрать другой файл';
+fileName.textContent = `Загружен файл: ${e.target.files[0].name}`;
+fileName.style.display = 'block';
+processFile(e.target.files[0]);
+}
+});
+
+// Функция обработки файла
+function processFile(file) {
+resultsTable.style.display = 'none';
+summary.style.display = 'none';
+error.style.display = 'none';
+totalRow.style.display = 'none';
+if (searchInput) searchInput.value = '';
+loading.style.display = 'block';
+const reader = new FileReader();
+reader.onload = function(e) {
+try {
+const data = e.target.result;
+const workbook = XLSX.read(data, { type: 'binary' });
+const summaryData = {};
+let processedSheets = 0;
+sheetNamesList = [];
+workbook.SheetNames.forEach(sheetName => {
+const worksheet = workbook.Sheets[sheetName];
+const sheetData = XLSX.utils.sheet_to_json(worksheet, {
+header: 1,
+defval: ''
+});
+let hasData = false;
+let lastNonEmptyB = null;
+for (let i = 3; i < sheetData.length; i++) {
+const row = sheetData[i];
+if (row[1] !== undefined && row[1] !== '') {
+lastNonEmptyB = String(row[1]).trim();
+}
+const workingCenter = lastNonEmptyB || '(пусто)';
+if (row[8] !== undefined && row[8] !== '') {
+const itemName = String(row[8]).trim();
+const itemNameLower = itemName.toLowerCase();
+if (itemName === '') continue;
+let quantity = 0;
+if (row[14] !== undefined && row[14] !== '') {
+quantity = parseFloat(row[14]) || 0;
+}
+let warehouseValue = 0;
+if (row[18] !== undefined && row[18] !== '') {
+warehouseValue = parseFloat(row[18]) || 0;
+}
+if (quantity > 0 || warehouseValue > 0) {
+hasData = true;
+let existingKey = null;
+for (const key in summaryData) {
+if (key.toLowerCase() === itemNameLower) {
+existingKey = key;
+break;
+}
+}
+if (existingKey !== null) {
+const existingItem = summaryData[existingKey];
+existingItem.total += quantity;
+existingItem.warehouse += warehouseValue;
+existingItem.sheets.add(sheetName);
+if (!existingItem.sheetsData[sheetName]) {
+existingItem.sheetsData[sheetName] = {
+stamping: 0,
+warehouse: 0
+};
+}
+existingItem.sheetsData[sheetName].stamping += quantity;
+existingItem.sheetsData[sheetName].warehouse += warehouseValue;
+existingItem.workingCenters.add(workingCenter);
+if (!existingItem.workingCentersData[workingCenter]) {
+existingItem.workingCentersData[workingCenter] = 0;
+}
+existingItem.workingCentersData[workingCenter] += quantity;
+if (!existingItem.centerSheetsData[workingCenter]) {
+existingItem.centerSheetsData[workingCenter] = {
+sheetsData: {},
+sheets: new Set(),
+sheetsArray: [],
+total: 0,
+warehouse: 0
+};
+}
+const centerData = existingItem.centerSheetsData[workingCenter];
+if (!centerData.sheetsData[sheetName]) {
+centerData.sheetsData[sheetName] = {
+stamping: 0,
+warehouse: 0
+};
+}
+centerData.sheetsData[sheetName].stamping += quantity;
+centerData.sheetsData[sheetName].warehouse += warehouseValue;
+centerData.sheets.add(sheetName);
+if (!centerData.sheetsArray.includes(sheetName)) {
+centerData.sheetsArray.push(sheetName);
+}
+centerData.total += quantity;
+centerData.warehouse += warehouseValue;
+if (!existingItem.sheetsArray.includes(sheetName)) {
+existingItem.sheetsArray.push(sheetName);
+}
+} else {
+summaryData[itemName] = {
+total: quantity,
+warehouse: warehouseValue,
+sheets: new Set([sheetName]),
+sheetsArray: [sheetName],
+sheetsData: {
+[sheetName]: {
+stamping: quantity,
+warehouse: warehouseValue
+}
+},
+workingCenters: new Set([workingCenter]),
+workingCentersData: {
+[workingCenter]: quantity
+},
+centerSheetsData: {
+[workingCenter]: {
+sheetsData: {
+[sheetName]: {
+stamping: quantity,
+warehouse: warehouseValue
+}
+},
+sheets: new Set([sheetName]),
+sheetsArray: [sheetName],
+total: quantity,
+warehouse: warehouseValue
+}
+}
+};
+}
+}
+}
+}
+if (hasData) {
+processedSheets++;
+sheetNamesList.push(sheetName);
+}
+});
+currentData = Object.entries(summaryData)
+.map(([name, info]) => ({
+name,
+total: info.total,
+warehouse: info.warehouse,
+sheetCount: info.sheets.size,
+sheetsArray: info.sheetsArray,
+sheetsData: info.sheetsData,
+workingCenter: Array.from(info.workingCenters).filter(Boolean).join('; '),
+workingCentersArray: Array.from(info.workingCenters),
+workingCentersData: info.workingCentersData,
+centerSheetsData: info.centerSheetsData
+}))
+.sort((a, b) => a.name.localeCompare(b.name));
+updateResults(currentData, processedSheets);
+initFilters(currentData);
+} catch (err) {
+showError('Ошибка при обработке файла: ' + err.message);
+console.error(err);
+} finally {
+loading.style.display = 'none';
+}
+};
+reader.onerror = function() {
+showError('Ошибка при чтении файла');
+loading.style.display = 'none';
+};
+reader.readAsBinaryString(file);
+}
+
+// Инициализация фильтров
+function initFilters(data) {
+allNameValues = [...new Set(data.map(item => item.name))].sort();
+    
+const allCentersSet = new Set();
+data.forEach(item => {
+if (item.workingCentersArray && item.workingCentersArray.length > 0) {
+item.workingCentersArray.forEach(center => {
+if (center && center.trim() !== '') {
+allCentersSet.add(center);
+}
+});
+}
+});
+allCenterValues = Array.from(allCentersSet).sort();
+    
+// ВАЖНОЕ ИЗМЕНЕНИЕ: инициализируем активные фильтры ПУСТЫМИ
+// Пользователь будет выбирать фильтры вручную
+activeNameFilters = new Set(); // Пусто - показывать все
+activeCenterFilters = new Set(); // Пусто - показывать все
+    
+updateNameFilterItems();
+updateCenterFilterItems();
+    
+// ИЗМЕНЕНИЕ: поиск в фильтре должен фильтровать таблицу мгновенно
+searchInput.addEventListener('input', function() {
+applyFilters();
+});
+    
+// Кнопка "Выбрать все" для номенклатуры
+selectAllNameBtn.addEventListener('click', function() {
+const checkboxes = filterItemsContainerName.querySelectorAll('input[type="checkbox"]');
+const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        
+// Если в поиске есть текст, берем только отфильтрованные элементы
+const searchTerm = searchInput.value.toLowerCase().trim();
+let itemsToToggle;
+if (searchTerm) {
+itemsToToggle = Array.from(checkboxes)
+.filter(checkbox => {
+const name = checkbox.value.toLowerCase();
+return name.includes(searchTerm);
+})
+.map(checkbox => checkbox.value);
+} else {
+itemsToToggle = allNameValues;
+}
+        
+// Переключаем состояние
+itemsToToggle.forEach(name => {
+if (!allChecked) {
+activeNameFilters.add(name);
+} else {
+activeNameFilters.delete(name);
+}
+});
+        
+updateNameFilterItems();
+applyFilters();
+});
+    
+// Кнопка "Выбрать все" для рабочих центров
+selectAllCenterBtn.addEventListener('click', function() {
+const checkboxes = filterItemsContainerCenter.querySelectorAll('input[type="checkbox"]');
+const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        
+checkboxes.forEach(checkbox => {
+checkbox.checked = !allChecked;
+const center = checkbox.value;
+if (!allChecked) {
+activeCenterFilters.add(center);
+} else {
+activeCenterFilters.delete(center);
+}
+});
+        
+updateCenterFilterItems();
+applyFilters();
+});
+}
+
+// Обновление элементов фильтра для номенклатуры
+function updateNameFilterItems() {
+filterItemsContainerName.innerHTML = '';
+    
+// Фильтруем по поисковому запросу
+const searchTerm = searchInput.value.toLowerCase().trim();
+let filteredNames = allNameValues;
+if (searchTerm) {
+filteredNames = allNameValues.filter(name =>
+name.toLowerCase().includes(searchTerm)
+);
+}
+    
+filteredNames.forEach(name => {
+const div = document.createElement('div');
+div.className = 'filter-item';
+        
+const checkbox = document.createElement('input');
+checkbox.type = 'checkbox';
+checkbox.id = `name-${name.replace(/\s+/g, '-')}`;
+checkbox.value = name;
+checkbox.checked = activeNameFilters.has(name);
+checkbox.addEventListener('change', function() {
+if (this.checked) {
+activeNameFilters.add(name);
+} else {
+activeNameFilters.delete(name);
+}
+applyFilters();
+});
+        
+const label = document.createElement('label');
+label.htmlFor = checkbox.id;
+label.textContent = name;
+        
+div.appendChild(checkbox);
+div.appendChild(label);
+filterItemsContainerName.appendChild(div);
+});
+    
+// Обновляем текст кнопки "Выбрать все"
+const allFilteredChecked = filteredNames.length > 0 && 
+filteredNames.every(name => activeNameFilters.has(name));
+selectAllNameBtn.textContent = allFilteredChecked ? 'Отменить выбор' : 'Выбрать все';
+selectAllNameBtn.classList.toggle('deselect', allFilteredChecked);
+}
+
+// Обновление элементов фильтра для рабочих центров
+function updateCenterFilterItems() {
+filterItemsContainerCenter.innerHTML = '';
+    
+allCenterValues.forEach(center => {
+const div = document.createElement('div');
+div.className = 'filter-item';
+        
+const checkbox = document.createElement('input');
+checkbox.type = 'checkbox';
+checkbox.id = `center-${center.replace(/\s+/g, '-')}`;
+checkbox.value = center;
+checkbox.checked = activeCenterFilters.has(center);
+checkbox.addEventListener('change', function() {
+if (this.checked) {
+activeCenterFilters.add(center);
+} else {
+activeCenterFilters.delete(center);
+}
+applyFilters();
+});
+        
+const label = document.createElement('label');
+label.htmlFor = checkbox.id;
+label.textContent = center;
+        
+div.appendChild(checkbox);
+div.appendChild(label);
+filterItemsContainerCenter.appendChild(div);
+});
+    
+// Обновляем текст кнопки "Выбрать все"
+const allChecked = allCenterValues.length > 0 && 
+allCenterValues.every(center => activeCenterFilters.has(center));
+selectAllCenterBtn.textContent = allChecked ? 'Отменить выбор' : 'Выбрать все';
+selectAllCenterBtn.classList.toggle('deselect', allChecked);
+}
+
+// ИЗМЕНЕНИЕ: Упрощенная логика фильтрации
+function applyFilters() {
+const rows = resultsBody.querySelectorAll('tr');
+let visibleCount = 0;
+    
+// Получаем поисковый запрос
+const searchTerm = searchInput.value.toLowerCase().trim();
+    
+rows.forEach(row => {
+const name = row.cells[0].textContent;
+const centerCell = row.cells[4];
+const centerValue = centerCell.textContent;
+        
+// Проверяем фильтр по номенклатуре
+let nameMatch = true;
+if (activeNameFilters.size > 0) {
+// Если есть активные фильтры, проверяем по ним
+nameMatch = activeNameFilters.has(name);
+}
+        
+// Проверяем поисковый запрос (работает независимо от чекбоксов)
+if (searchTerm && !name.toLowerCase().includes(searchTerm)) {
+nameMatch = false;
+}
+        
+// Проверяем фильтр по рабочему центру
+let centerMatch = true;
+if (activeCenterFilters.size > 0) {
+const centers = centerValue.split('; ').filter(c => c.trim() !== '');
+if (centers.length === 0) {
+centerMatch = activeCenterFilters.has('(пусто)');
+} else {
+centerMatch = centers.some(center => activeCenterFilters.has(center));
+}
+}
+        
+const shouldDisplay = nameMatch && centerMatch;
+row.style.display = shouldDisplay ? '' : 'none';
+if (shouldDisplay) {
+visibleCount++;
+}
+});
+    
+updateTotalsForVisibleRows();
+}
+
+// Обновление итогов для видимых строк
+function updateTotalsForVisibleRows() {
+const rows = resultsBody.querySelectorAll('tr');
+let visibleTotalQty = 0;
+let visibleTotalWarehouse = 0;
+let visibleTotalSheets = 0;
+    
+rows.forEach(row => {
+if (row.style.display !== 'none') {
+const qtyCell = row.cells[1];
+const warehouseCell = row.cells[2];
+const sheetsCell = row.cells[3];
+            
+visibleTotalQty += parseFloat(qtyCell.textContent.replace(/\s/g, '')) || 0;
+visibleTotalWarehouse += parseFloat(warehouseCell.textContent.replace(/\s/g, '')) || 0;
+visibleTotalSheets += parseInt(sheetsCell.querySelector('.sheets-count')?.textContent || 0);
+}
+});
+    
+grandTotalQuantity.textContent = formatNumber(visibleTotalQty);
+grandTotalWarehouse.textContent = formatNumber(visibleTotalWarehouse);
+grandTotalSheetsCount.textContent = visibleTotalSheets;
+}
+
+// Обработчики для кнопок фильтров
+document.querySelectorAll('.filter-btn').forEach(button => {
+button.addEventListener('click', function(e) {
+e.stopPropagation();
+const targetId = this.dataset.target;
+const dropdown = document.getElementById(targetId);
+        
+document.querySelectorAll('.filter-dropdown').forEach(d => {
+if (d !== dropdown) d.style.display = 'none';
+});
+        
+dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        
+if (targetId === 'filter-dropdown-name' && dropdown.style.display === 'block') {
+setTimeout(() => searchInput.focus(), 0);
+}
+});
+});
+
+// Закрытие выпадающих меню при клике вне их
+document.addEventListener('click', function(e) {
+if (!e.target.closest('.filter-dropdown') && !e.target.closest('.filter-btn')) {
+document.querySelectorAll('.filter-dropdown').forEach(d => {
+d.style.display = 'none';
+});
+}
+});
+
+// Фиксация шапки при прокрутке
+function setupHeaderFixation() {
+const tableHeaders = resultsTable.querySelectorAll('thead th');
+function updateHeaderFixation() {
+tableHeaders.forEach(th => {
+th.style.top = '0px';
+});
+}
+tableContainer.addEventListener('scroll', updateHeaderFixation);
+updateHeaderFixation();
+}
+
+// Функция обновления таблицы с результатами
+function updateResults(data, processedSheetsCount) {
+resultsBody.innerHTML = '';
+    
+if (data.length === 0) {
+showError('В файле не найдено данных с количеством больше 0');
+return;
+}
+    
+let grandTotalQty = 0;
+let grandTotalWarehouseVal = 0;
+    
+data.forEach((item, index) => {
+const row = document.createElement('tr');
+        
+const nameCell = document.createElement('td');
+nameCell.textContent = item.name;
+        
+const totalCell = document.createElement('td');
+totalCell.textContent = formatNumber(item.total);
+totalCell.className = 'total-cell';
+        
+const warehouseCell = document.createElement('td');
+warehouseCell.textContent = formatNumber(item.warehouse);
+warehouseCell.className = 'warehouse-cell';
+        
+const sheetsCell = document.createElement('td');
+sheetsCell.className = 'sheets-cell';
+        
+const cellContent = document.createElement('div');
+cellContent.className = 'sheets-cell-content';
+        
+const countContainer = document.createElement('div');
+countContainer.className = 'sheets-count-container';
+        
+const countSpan = document.createElement('span');
+countSpan.className = 'sheets-count';
+countSpan.textContent = item.sheetCount;
+countContainer.appendChild(countSpan);
+        
+cellContent.appendChild(countContainer);
+        
+const buttonContainer = document.createElement('div');
+buttonContainer.className = 'sheets-btn-container';
+        
+if (item.sheetCount > 0) {
+const spoilerBtn = document.createElement('button');
+spoilerBtn.className = 'spoiler-btn';
+spoilerBtn.textContent = 'Показать листы';
+spoilerBtn.dataset.index = index;
+buttonContainer.appendChild(spoilerBtn);
+            
+const sheetsList = document.createElement('div');
+sheetsList.className = 'sheets-list';
+sheetsList.id = `sheets-list-${index}`;
+            
+const columnsContainer = document.createElement('div');
+columnsContainer.style.display = 'flex';
+columnsContainer.style.gap = '15px';
+            
+const stampingColumn = document.createElement('div');
+stampingColumn.style.flex = '1';
+const stampingHeader = document.createElement('div');
+stampingHeader.textContent = 'Штамповка';
+stampingHeader.style.fontWeight = 'bold';
+stampingHeader.style.marginBottom = '5px';
+stampingHeader.style.color = 'var(--text-color)';
+stampingColumn.appendChild(stampingHeader);
+            
+const warehouseColumn = document.createElement('div');
+warehouseColumn.style.flex = '1';
+const warehouseHeader = document.createElement('div');
+warehouseHeader.textContent = 'Склад';
+warehouseHeader.style.fontWeight = 'bold';
+warehouseHeader.style.marginBottom = '5px';
+warehouseHeader.style.color = 'var(--text-color)';
+warehouseColumn.appendChild(warehouseHeader);
+            
+const sortedSheets = [...item.sheetsArray].sort();
+            
+// *** ИЗМЕНЕНИЕ: убраны итоги из выпадающего списка (возвращено как было) ***
+sortedSheets.forEach(sheetName => {
+const sheetInfo = item.sheetsData[sheetName];
+if (!sheetInfo) return;
+                
+if (sheetInfo.stamping > 0) {
+const stampingItem = document.createElement('div');
+stampingItem.className = 'sheet-item';
+stampingItem.textContent = `${sheetName} (${sheetInfo.stamping}шт)`;
+stampingColumn.appendChild(stampingItem);
+}
+                
+if (sheetInfo.warehouse > 0) {
+const warehouseItem = document.createElement('div');
+warehouseItem.className = 'sheet-item';
+warehouseItem.textContent = `${sheetName} (${sheetInfo.warehouse}шт)`;
+warehouseColumn.appendChild(warehouseItem);
+}
+});
+// *** КОНЕЦ ИЗМЕНЕНИЯ ***
+            
+columnsContainer.appendChild(stampingColumn);
+columnsContainer.appendChild(warehouseColumn);
+sheetsList.appendChild(columnsContainer);
+            
+const expandBtn = document.createElement('button');
+expandBtn.className = 'expand-sheets-btn';
+expandBtn.textContent = 'Развернуть';
+expandBtn.dataset.index = index;
+expandBtn.addEventListener('click', function(e) {
+e.stopPropagation();
+sheetsList.classList.remove('show');
+spoilerBtn.textContent = 'Показать листы';
+openFullSheetsModal(item, index);
+});
+sheetsList.appendChild(expandBtn);
+            
+cellContent.appendChild(sheetsList);
+            
+spoilerBtn.addEventListener('click', function(e) {
+e.stopPropagation();
+const listId = `sheets-list-${this.dataset.index}`;
+const sheetsList = document.getElementById(listId);
+                
+if (sheetsList.classList.contains('show')) {
+sheetsList.classList.remove('show');
+this.textContent = 'Показать листы';
+} else {
+document.querySelectorAll('.sheets-list.show').forEach(el => {
+el.classList.remove('show');
+});
+document.querySelectorAll('.spoiler-btn').forEach(btn => {
+btn.textContent = 'Показать листы';
+});
+                    
+sheetsList.classList.add('show');
+this.textContent = 'Скрыть листы';
+sheetsList.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+});
+}
+        
+cellContent.appendChild(buttonContainer);
+sheetsCell.appendChild(cellContent);
+        
+const centerCell = document.createElement('td');
+centerCell.textContent = item.workingCenter;
+centerCell.className = 'center-cell';
+        
+row.appendChild(nameCell);
+row.appendChild(totalCell);
+row.appendChild(warehouseCell);
+row.appendChild(sheetsCell);
+row.appendChild(centerCell);
+        
+resultsBody.appendChild(row);
+        
+grandTotalQty += item.total;
+grandTotalWarehouseVal += item.warehouse;
+});
+    
+const totalItemsCount = data.length;
+totalItems.textContent = totalItemsCount;
+totalQuantity.textContent = formatNumber(grandTotalQty);
+totalWarehouse.textContent = formatNumber(grandTotalWarehouseVal);
+totalSheets.textContent = processedSheetsCount;
+    
+grandTotalQuantity.textContent = formatNumber(grandTotalQty);
+grandTotalWarehouse.textContent = formatNumber(grandTotalWarehouseVal);
+grandTotalSheetsCount.textContent = processedSheetsCount;
+    
+resultsTable.style.display = 'table';
+summary.style.display = 'grid';
+totalRow.style.display = 'table-row';
+    
+setupHeaderFixation();
+    
+document.addEventListener('click', function(e) {
+if (!e.target.closest('.spoiler-btn') && !e.target.closest('.sheets-list') && !e.target.closest('.expand-sheets-btn')) {
+document.querySelectorAll('.sheets-list.show').forEach(el => {
+el.classList.remove('show');
+});
+document.querySelectorAll('.spoiler-btn').forEach(btn => {
+btn.textContent = 'Показать листы';
+});
+}
+});
+}
+
+// Функция открытия полноэкранного модального окна
+function openFullSheetsModal(item, index) {
+let modal = document.getElementById(`full-sheets-modal-${index}`);
+if (!modal) {
+modal = document.createElement('div');
+modal.className = 'full-sheets-modal';
+modal.id = `full-sheets-modal-${index}`;
+        
+const columnsContainer = document.createElement('div');
+columnsContainer.style.display = 'flex';
+columnsContainer.style.gap = '20px';
+columnsContainer.style.marginBottom = '15px';
+        
+const stampingColumn = document.createElement('div');
+stampingColumn.style.flex = '1';
+const stampingHeader = document.createElement('div');
+stampingHeader.textContent = 'Штамповка';
+stampingHeader.style.fontWeight = 'bold';
+stampingHeader.style.marginBottom = '10px';
+stampingHeader.style.color = 'var(--text-color)';
+stampingHeader.style.fontSize = '14px';
+stampingColumn.appendChild(stampingHeader);
+        
+const warehouseColumn = document.createElement('div');
+warehouseColumn.style.flex = '1';
+const warehouseHeader = document.createElement('div');
+warehouseHeader.textContent = 'Склад';
+warehouseHeader.style.fontWeight = 'bold';
+warehouseHeader.style.marginBottom = '10px';
+warehouseHeader.style.color = 'var(--text-color)';
+warehouseHeader.style.fontSize = '14px';
+warehouseColumn.appendChild(warehouseHeader);
+        
+const sortedSheets = [...item.sheetsArray].sort();
+        
+// Собираем записи для штамповки и склада
+const stampingItems = [];
+const warehouseItems = [];
+        
+sortedSheets.forEach(sheetName => {
+const sheetInfo = item.sheetsData[sheetName];
+if (!sheetInfo) return;
+            
+if (sheetInfo.stamping > 0) {
+const stampingItem = document.createElement('div');
+stampingItem.className = 'sheet-item';
+stampingItem.textContent = `${sheetName} (${sheetInfo.stamping}шт)`;
+stampingColumn.appendChild(stampingItem);
+stampingItems.push(sheetInfo.stamping);
+}
+            
+if (sheetInfo.warehouse > 0) {
+const warehouseItem = document.createElement('div');
+warehouseItem.className = 'sheet-item';
+warehouseItem.textContent = `${sheetName} (${sheetInfo.warehouse}шт)`;
+warehouseColumn.appendChild(warehouseItem);
+warehouseItems.push(sheetInfo.warehouse);
+}
+});
+        
+// *** ИЗМЕНЕНИЕ: добавляем итоги только если больше 1 элемента и сумма > 0 ***
+const totalStamping = stampingItems.reduce((acc, val) => acc + val, 0);
+const totalWarehouse = warehouseItems.reduce((acc, val) => acc + val, 0);
+        
+if (stampingItems.length > 1 && totalStamping > 0) {
+const stampingTotalDiv = document.createElement('div');
+stampingTotalDiv.className = 'sheet-total';
+stampingTotalDiv.textContent = `Итого: ${formatNumber(totalStamping)}шт`;
+stampingColumn.appendChild(stampingTotalDiv);
+}
+        
+if (warehouseItems.length > 1 && totalWarehouse > 0) {
+const warehouseTotalDiv = document.createElement('div');
+warehouseTotalDiv.className = 'sheet-total';
+warehouseTotalDiv.textContent = `Итого: ${formatNumber(totalWarehouse)}шт`;
+warehouseColumn.appendChild(warehouseTotalDiv);
+}
+// *** КОНЕЦ ИЗМЕНЕНИЯ ***
+        
+columnsContainer.appendChild(stampingColumn);
+columnsContainer.appendChild(warehouseColumn);
+modal.appendChild(columnsContainer);
+        
+const title = document.createElement('h3');
+title.textContent = ` ${item.name}`;
+title.style.marginTop = '0';
+title.style.marginBottom = '20px';
+title.style.color = 'var(--text-color)';
+title.style.textAlign = 'center';
+title.style.fontSize = '16px';
+modal.insertBefore(title, columnsContainer);
+        
+const closeBtn = document.createElement('button');
+closeBtn.className = 'close-full-modal';
+closeBtn.textContent = 'Закрыть';
+closeBtn.addEventListener('click', function() {
+modal.classList.remove('show');
+sheetsOverlay.classList.remove('show');
+});
+modal.appendChild(closeBtn);
+        
+document.body.appendChild(modal);
+}
+    
+modal.classList.add('show');
+sheetsOverlay.classList.add('show');
+}
+
+// Функция экспорта в Excel
+function exportToExcel() {
+    if (currentData.length === 0) {
+        alert('Нет данных для экспорта');
+        return;
+    }
+    
+    try {
+        // Находим максимальное количество рабочих центров в одной строке
+        let maxCenters = 1;
+        currentData.forEach(item => {
+            if (item.workingCenter) {
+                const centers = item.workingCenter.split(';').map(c => c.trim()).filter(c => c);
+                if (centers.length > maxCenters) {
+                    maxCenters = centers.length;
+                }
+            }
+        });
+        
+        // Создаем заголовки
+        const headers = [
+            'Номенклатура', 
+            'Отштамповано', 
+            'Склад', 
+            'Количество листов',
+            'Листы со штамповкой', 
+            'Листы со сдачей на склад'
+        ];
+        
+        // Добавляем заголовки для рабочих центров
+        for (let i = 1; i <= maxCenters; i++) {
+            headers.push(i === 1 ? 'Рабочий центр' : `Рабочий центр ${i}`);
+        }
+        
+        const exportData = [headers];
+        
+        // Обрабатываем данные
+        currentData.forEach(item => {
+            // Сортируем листы для вывода
+            const sortedSheets = [...item.sheetsArray].sort();
+            
+            // Разделяем листы на штамповку и склад
+            const stampingSheets = [];
+            const warehouseSheets = [];
+            
+            sortedSheets.forEach(sheetName => {
+                const sheetInfo = item.sheetsData[sheetName];
+                if (sheetInfo) {
+                    if (sheetInfo.stamping > 0) {
+                        stampingSheets.push(sheetName);
+                    }
+                    if (sheetInfo.warehouse > 0) {
+                        warehouseSheets.push(sheetName);
+                    }
+                }
+            });
+            
+            // Создаем строку с базовыми данными
+            const row = [
+                item.name,
+                item.total,
+                item.warehouse,
+                item.sheetCount,
+                stampingSheets.join('; '),
+                warehouseSheets.join('; ')
+            ];
+            
+            // Добавляем рабочие центры по отдельным столбцам
+            if (item.workingCenter) {
+                const centers = item.workingCenter.split(';').map(c => c.trim()).filter(c => c);
+                for (let i = 0; i < maxCenters; i++) {
+                    row.push(centers[i] || ''); // Добавляем центр или пустую строку
+                }
+            } else {
+                // Если нет рабочих центров, заполняем пустыми значениями
+                for (let i = 0; i < maxCenters; i++) {
+                    row.push('');
+                }
+            }
+            
+            exportData.push(row);
+        });
+        
+        // Добавляем итоговую строку
+        const totalQty = currentData.reduce((sum, item) => sum + item.total, 0);
+        const totalWarehouseVal = currentData.reduce((sum, item) => sum + item.warehouse, 0);
+        
+        // Создаем итоговую строку с правильным количеством столбцов
+        const totalRow = ['ИТОГО', totalQty, totalWarehouseVal, '', '', ''];
+        for (let i = 0; i < maxCenters; i++) {
+            totalRow.push('');
+        }
+        
+        exportData.push(totalRow);
+        
+        const ws = XLSX.utils.aoa_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Отчет');
+        
+        const fileName = `отчет_штамповка_${new Date().toISOString().slice(0,10)}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+        
+    } catch (err) {
+        alert('Ошибка при экспорте: ' + err.message);
+    }
+}
+
+// Функция форматирования чисел
+function formatNumber(num) {
+if (num % 1 === 0) {
+return num.toLocaleString('ru-RU');
+} else {
+return num.toLocaleString('ru-RU', {
+minimumFractionDigits: 2,
+maximumFractionDigits: 2
+});
+}
+}
+
+// Функция отображения ошибок
+function showError(message) {
+error.textContent = message;
+error.style.display = 'block';
+}
+
+// Обработчики drag and drop
+document.addEventListener('dragover', function(e) {
+e.preventDefault();
+e.stopPropagation();
+if (e.dataTransfer.types.includes('Files')) {
+uploadHeaderBtn.style.backgroundColor = '#2e7d32';
+}
+});
+document.addEventListener('dragleave', function(e) {
+e.preventDefault();
+e.stopPropagation();
+if (!e.relatedTarget || !e.currentTarget.contains(e.relatedTarget)) {
+uploadHeaderBtn.style.backgroundColor = '';
+}
+});
+document.addEventListener('drop', function(e) {
+e.preventDefault();
+e.stopPropagation();
+uploadHeaderBtn.style.backgroundColor = '';
+if (e.dataTransfer.files.length > 0) {
+const file = e.dataTransfer.files[0];
+if (file.name.match(/\.(xlsx|xls)$/)) {
+uploadHeaderBtn.textContent = 'Выбрать другой файл';
+fileName.textContent = `Загружен файл: ${file.name}`;
+fileName.style.display = 'block';
+processFile(file);
+} else {
+showError('Пожалуйста, выберите Excel файл (.xlsx или .xls)');
+}
+}
+});
+
+// Закрытие полноэкранного модального окна при клике на overlay
+sheetsOverlay.addEventListener('click', function() {
+document.querySelectorAll('.full-sheets-modal.show').forEach(modal => {
+modal.classList.remove('show');
+});
+this.classList.remove('show');
+});
+
+// Закрытие полноэкранного модального окна при нажатии Escape
+document.addEventListener('keydown', function(e) {
+if (e.key === 'Escape') {
+document.querySelectorAll('.full-sheets-modal.show').forEach(modal => {
+modal.classList.remove('show');
+});
+sheetsOverlay.classList.remove('show');
+}
+});
+});
+</script>
+</body>
+</html>
