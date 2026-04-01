@@ -1026,7 +1026,7 @@ let warehouseValue = 0;
 if (row[18] !== undefined && row[18] !== '') {
 warehouseValue = parseFloat(row[18]) || 0;
 }
-if (quantity > 0 || warehouseValue > 0) {
+if (quantity !== 0 || warehouseValue !== 0) {
 hasData = true;
 let existingKey = null;
 for (const key in summaryData) {
