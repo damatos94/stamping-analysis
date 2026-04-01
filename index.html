@@ -1511,14 +1511,14 @@ sortedSheets.forEach(sheetName => {
 const sheetInfo = item.sheetsData[sheetName];
 if (!sheetInfo) return;
                 
-if (sheetInfo.stamping > 0) {
+if (sheetInfo.stamping !== 0) {
 const stampingItem = document.createElement('div');
 stampingItem.className = 'sheet-item';
 stampingItem.textContent = `${sheetName} (${sheetInfo.stamping}шт)`;
 stampingColumn.appendChild(stampingItem);
 }
                 
-if (sheetInfo.warehouse > 0) {
+if (sheetInfo.warehouse !== 0) {
 const warehouseItem = document.createElement('div');
 warehouseItem.className = 'sheet-item';
 warehouseItem.textContent = `${sheetName} (${sheetInfo.warehouse}шт)`;
