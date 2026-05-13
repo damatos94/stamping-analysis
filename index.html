@@ -167,27 +167,6 @@ justify-content: center;
 .export-header-btn:hover {
 background-color: var(--export-btn-hover);
 }
-.refresh-header-btn {
-background-color: var(--header-bg);
-color: white;
-border: none;
-padding: 8px 16px;
-border-radius: 20px;
-cursor: pointer;
-font-size: 14px;
-font-weight: 500;
-transition: all 0.3s;
-height: 36px;
-white-space: nowrap;
-display: inline-flex;
-align-items: center;
-justify-content: center;
-gap: 6px;
-/* margin-right: 8px;  Удалён лишний отступ */
-}
-.refresh-header-btn:hover {
-background-color: var(--button-hover);
-}
 .theme-toggle-header {
 background: none;
 border: none;
@@ -741,14 +720,9 @@ flex: 1;
 <div id="fileName" class="file-info"></div>
 </div>
 </div>
-<div style="display: flex; align-items: center; gap: 15px;">
-<button id="refreshHeaderBtn" class="refresh-header-btn" title="Обновить данные">
-🔄
-</button>
 <button class="theme-toggle-header" id="themeToggleHeader">
 🌙
 </button>
-</div>
 </div>
 <h1 class="main-title">Анализ отштампованных деталей</h1>
 <div class="summary" id="summary">
@@ -869,7 +843,6 @@ document.addEventListener('DOMContentLoaded', function() {
 const themeToggleHeader = document.getElementById('themeToggleHeader');
 const uploadHeaderBtn = document.getElementById('uploadHeaderBtn');
 const exportHeaderBtn = document.getElementById('exportHeaderBtn');
-const refreshHeaderBtn = document.getElementById('refreshHeaderBtn');
 const fileInput = document.createElement('input');
 fileInput.type = 'file';
 fileInput.className = 'file-input';
@@ -904,11 +877,6 @@ let allNameValues = [];
 let allCenterValues = [];
 let activeNameFilters = new Set();
 let activeCenterFilters = new Set();
-let lastLoadedFile = null;
-let preserveFiltersFlag = false;
-let savedNameFilters = null;
-let savedCenterFilters = null;
-let savedSearchTerm = "";
 
 const body = document.body;
 
@@ -952,15 +920,11 @@ themeToggleHeader.addEventListener('click', function() {
     }
 });
 
-refreshHeaderBtn.addEventListener('click', function() {
-    if (lastLoadedFile) {
-        savedNameFilters = new Set(activeNameFilters);
-        savedCenterFilters = new Set(activeCenterFilters);
-        savedSearchTerm = searchInput.value;
-        preserveFiltersFlag = true;
-        processFile(lastLoadedFile);
-    } else {
-        alert('Нет загруженного файла. Сначала загрузите Excel-файл.');
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+    const savedTheme = localStorage.getItem('theme');
+    if (!savedTheme) {
+        const newTheme = e.matches ? 'dark' : 'light';
+        setTheme(newTheme);
     }
 });
 
@@ -974,12 +938,10 @@ exportHeaderBtn.addEventListener('click', function() {
 
 fileInput.addEventListener('change', function(e) {
     if (e.target.files.length > 0) {
-        const file = e.target.files[0];
-        lastLoadedFile = file;
         uploadHeaderBtn.textContent = 'Выбрать другой файл';
-        fileName.textContent = `Загружен файл: ${file.name}`;
+        fileName.textContent = `Загружен файл: ${e.target.files[0].name}`;
         fileName.style.display = 'block';
-        processFile(file);
+        processFile(e.target.files[0]);
     }
 });
 
@@ -988,7 +950,7 @@ function processFile(file) {
     summary.style.display = 'none';
     error.style.display = 'none';
     totalRow.style.display = 'none';
-    if (!preserveFiltersFlag && searchInput) searchInput.value = '';
+    if (searchInput) searchInput.value = '';
     loading.style.display = 'block';
     const reader = new FileReader();
     reader.onload = function(e) {
@@ -1024,6 +986,7 @@ function processFile(file) {
                         if (row[18] !== undefined && row[18] !== '') {
                             warehouseValue = parseFloat(row[18]) || 0;
                         }
+                        // ИСПРАВЛЕНО: теперь учитываем отрицательные значения
                         if (quantity !== 0 || warehouseValue !== 0) {
                             hasData = true;
                             let existingKey = null;
@@ -1139,16 +1102,11 @@ function processFile(file) {
             console.error(err);
         } finally {
             loading.style.display = 'none';
-            preserveFiltersFlag = false;
-            savedNameFilters = null;
-            savedCenterFilters = null;
-            savedSearchTerm = "";
         }
     };
     reader.onerror = function() {
         showError('Ошибка при чтении файла');
         loading.style.display = 'none';
-        preserveFiltersFlag = false;
     };
     reader.readAsBinaryString(file);
 }
@@ -1168,93 +1126,61 @@ function initFilters(data) {
     });
     allCenterValues = Array.from(allCentersSet).sort();
     
-    if (preserveFiltersFlag && savedNameFilters && savedCenterFilters) {
-        const newActiveNames = new Set();
-        savedNameFilters.forEach(name => {
-            if (allNameValues.includes(name)) newActiveNames.add(name);
-        });
-        activeNameFilters = newActiveNames;
-        
-        const newActiveCenters = new Set();
-        savedCenterFilters.forEach(center => {
-            if (allCenterValues.includes(center)) newActiveCenters.add(center);
-        });
-        activeCenterFilters = newActiveCenters;
-        
-        if (savedSearchTerm !== undefined) {
-            searchInput.value = savedSearchTerm;
-        }
-    } else {
-        activeNameFilters.clear();
-        activeCenterFilters.clear();
-        searchInput.value = '';
-    }
+    activeNameFilters = new Set();
+    activeCenterFilters = new Set();
     
     updateNameFilterItems();
     updateCenterFilterItems();
     
-    if (preserveFiltersFlag) {
+    searchInput.addEventListener('input', function() {
         applyFilters();
-    }
+    });
     
-    if (!searchInput._listenerAdded) {
-        searchInput.addEventListener('input', function() {
-            applyFilters();
-        });
-        searchInput._listenerAdded = true;
-    }
-    
-    if (!selectAllNameBtn._listenerAdded) {
-        selectAllNameBtn.addEventListener('click', function() {
-            const checkboxes = filterItemsContainerName.querySelectorAll('input[type="checkbox"]');
-            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-            const searchTerm = searchInput.value.toLowerCase().trim();
-            let itemsToToggle;
-            if (searchTerm) {
-                itemsToToggle = Array.from(checkboxes)
-                    .filter(checkbox => {
-                        const name = checkbox.value.toLowerCase();
-                        return name.includes(searchTerm);
-                    })
-                    .map(checkbox => checkbox.value);
+    selectAllNameBtn.addEventListener('click', function() {
+        const checkboxes = filterItemsContainerName.querySelectorAll('input[type="checkbox"]');
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        let itemsToToggle;
+        if (searchTerm) {
+            itemsToToggle = Array.from(checkboxes)
+                .filter(checkbox => {
+                    const name = checkbox.value.toLowerCase();
+                    return name.includes(searchTerm);
+                })
+                .map(checkbox => checkbox.value);
+        } else {
+            itemsToToggle = allNameValues;
+        }
+        
+        itemsToToggle.forEach(name => {
+            if (!allChecked) {
+                activeNameFilters.add(name);
             } else {
-                itemsToToggle = allNameValues;
+                activeNameFilters.delete(name);
             }
-            
-            itemsToToggle.forEach(name => {
-                if (!allChecked) {
-                    activeNameFilters.add(name);
-                } else {
-                    activeNameFilters.delete(name);
-                }
-            });
-            
-            updateNameFilterItems();
-            applyFilters();
         });
-        selectAllNameBtn._listenerAdded = true;
-    }
+        
+        updateNameFilterItems();
+        applyFilters();
+    });
     
-    if (!selectAllCenterBtn._listenerAdded) {
-        selectAllCenterBtn.addEventListener('click', function() {
-            const checkboxes = filterItemsContainerCenter.querySelectorAll('input[type="checkbox"]');
-            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-            
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = !allChecked;
-                const center = checkbox.value;
-                if (!allChecked) {
-                    activeCenterFilters.add(center);
-                } else {
-                    activeCenterFilters.delete(center);
-                }
-            });
-            
-            updateCenterFilterItems();
-            applyFilters();
+    selectAllCenterBtn.addEventListener('click', function() {
+        const checkboxes = filterItemsContainerCenter.querySelectorAll('input[type="checkbox"]');
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = !allChecked;
+            const center = checkbox.value;
+            if (!allChecked) {
+                activeCenterFilters.add(center);
+            } else {
+                activeCenterFilters.delete(center);
+            }
         });
-        selectAllCenterBtn._listenerAdded = true;
-    }
+        
+        updateCenterFilterItems();
+        applyFilters();
+    });
 }
 
 function updateNameFilterItems() {
@@ -1368,7 +1294,9 @@ function applyFilters() {
         
         const shouldDisplay = nameMatch && centerMatch;
         row.style.display = shouldDisplay ? '' : 'none';
-        if (shouldDisplay) visibleCount++;
+        if (shouldDisplay) {
+            visibleCount++;
+        }
     });
     
     updateTotalsForVisibleRows();
@@ -1408,6 +1336,10 @@ document.querySelectorAll('.filter-btn').forEach(button => {
         });
         
         dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        
+        if (targetId === 'filter-dropdown-name' && dropdown.style.display === 'block') {
+            setTimeout(() => searchInput.focus(), 0);
+        }
     });
 });
 
@@ -1509,6 +1441,7 @@ function updateResults(data, processedSheetsCount) {
             
             const sortedSheets = [...item.sheetsArray].sort();
             
+            // ИСПРАВЛЕНО: показываем все значения, включая отрицательные
             sortedSheets.forEach(sheetName => {
                 const sheetInfo = item.sheetsData[sheetName];
                 if (!sheetInfo) return;
@@ -1549,10 +1482,10 @@ function updateResults(data, processedSheetsCount) {
             spoilerBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
                 const listId = `sheets-list-${this.dataset.index}`;
-                const sheetsListEl = document.getElementById(listId);
+                const sheetsList = document.getElementById(listId);
                 
-                if (sheetsListEl.classList.contains('show')) {
-                    sheetsListEl.classList.remove('show');
+                if (sheetsList.classList.contains('show')) {
+                    sheetsList.classList.remove('show');
                     this.textContent = 'Показать листы';
                 } else {
                     document.querySelectorAll('.sheets-list.show').forEach(el => {
@@ -1562,9 +1495,9 @@ function updateResults(data, processedSheetsCount) {
                         btn.textContent = 'Показать листы';
                     });
                     
-                    sheetsListEl.classList.add('show');
+                    sheetsList.classList.add('show');
                     this.textContent = 'Скрыть листы';
-                    sheetsListEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    sheetsList.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }
             });
         }
@@ -1653,6 +1586,7 @@ function openFullSheetsModal(item, index) {
         const stampingItems = [];
         const warehouseItems = [];
         
+        // ИСПРАВЛЕНО: показываем все значения, включая отрицательные
         sortedSheets.forEach(sheetName => {
             const sheetInfo = item.sheetsData[sheetName];
             if (!sheetInfo) return;
@@ -1675,7 +1609,7 @@ function openFullSheetsModal(item, index) {
         });
         
         const totalStamping = stampingItems.reduce((acc, val) => acc + val, 0);
-        const totalWarehouseSum = warehouseItems.reduce((acc, val) => acc + val, 0);
+        const totalWarehouse = warehouseItems.reduce((acc, val) => acc + val, 0);
         
         if (stampingItems.length > 1 && totalStamping !== 0) {
             const stampingTotalDiv = document.createElement('div');
@@ -1684,10 +1618,10 @@ function openFullSheetsModal(item, index) {
             stampingColumn.appendChild(stampingTotalDiv);
         }
         
-        if (warehouseItems.length > 1 && totalWarehouseSum !== 0) {
+        if (warehouseItems.length > 1 && totalWarehouse !== 0) {
             const warehouseTotalDiv = document.createElement('div');
             warehouseTotalDiv.className = 'sheet-total';
-            warehouseTotalDiv.textContent = `Итого: ${formatNumber(totalWarehouseSum)}шт`;
+            warehouseTotalDiv.textContent = `Итого: ${formatNumber(totalWarehouse)}шт`;
             warehouseColumn.appendChild(warehouseTotalDiv);
         }
         
@@ -1796,19 +1730,19 @@ function exportToExcel() {
         const totalQty = currentData.reduce((sum, item) => sum + item.total, 0);
         const totalWarehouseVal = currentData.reduce((sum, item) => sum + item.warehouse, 0);
         
-        const totalRowExport = ['ИТОГО', totalQty, totalWarehouseVal, '', '', ''];
+        const totalRow = ['ИТОГО', totalQty, totalWarehouseVal, '', '', ''];
         for (let i = 0; i < maxCenters; i++) {
-            totalRowExport.push('');
+            totalRow.push('');
         }
         
-        exportData.push(totalRowExport);
+        exportData.push(totalRow);
         
         const ws = XLSX.utils.aoa_to_sheet(exportData);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Отчет');
         
-        const fileNameExport = `отчет_штамповка_${new Date().toISOString().slice(0,10)}.xlsx`;
-        XLSX.writeFile(wb, fileNameExport);
+        const fileName = `отчет_штамповка_${new Date().toISOString().slice(0,10)}.xlsx`;
+        XLSX.writeFile(wb, fileName);
         
     } catch (err) {
         alert('Ошибка при экспорте: ' + err.message);
@@ -1842,7 +1776,9 @@ document.addEventListener('dragover', function(e) {
 document.addEventListener('dragleave', function(e) {
     e.preventDefault();
     e.stopPropagation();
-    uploadHeaderBtn.style.backgroundColor = '';
+    if (!e.relatedTarget || !e.currentTarget.contains(e.relatedTarget)) {
+        uploadHeaderBtn.style.backgroundColor = '';
+    }
 });
 
 document.addEventListener('drop', function(e) {
@@ -1852,7 +1788,6 @@ document.addEventListener('drop', function(e) {
     if (e.dataTransfer.files.length > 0) {
         const file = e.dataTransfer.files[0];
         if (file.name.match(/\.(xlsx|xls)$/)) {
-            lastLoadedFile = file;
             uploadHeaderBtn.textContent = 'Выбрать другой файл';
             fileName.textContent = `Загружен файл: ${file.name}`;
             fileName.style.display = 'block';
