@@ -399,19 +399,15 @@ background-color: var(--sheets-btn-hover);
 }
 .sheets-list {
 display: none;
-position: absolute;
-top: 100%;
-left: 0;
-right: 0;
+position: fixed;
 background-color: var(--container-bg);
 border: 1px solid var(--border-color);
 border-radius: 4px;
 padding: 8px;
 box-shadow: 0 4px 8px var(--dropdown-shadow);
-z-index: 100;
+z-index: 3000;
 max-height: 250px;
 overflow-y: auto;
-margin-top: 4px;
 font-size: 12px;
 }
 .sheets-list.show {
@@ -501,18 +497,16 @@ z-index: 1500;
 display: block;
 }
 .filter-dropdown {
-position: absolute;
+position: fixed;
 background: var(--dropdown-bg);
 border: 1px solid var(--border-color);
 box-shadow: 0 2px 10px var(--dropdown-shadow);
 padding: 8px;
-z-index: 1000;
+z-index: 3000;
 width: 200px;
 max-height: 250px;
 overflow-y: auto;
 display: none;
-top: 100% !important;
-left: 0 !important;
 color: var(--filter-text);
 font-size: 12px;
 }
@@ -1372,30 +1366,118 @@ function updateTotalsForVisibleRows() {
     grandTotalSheetsCount.textContent = visibleTotalSheets;
 }
 
+// Переносим дропдауны фильтров в конец <body>, чтобы они не обрезались
+// скроллящимся .table-container (overflow-y: auto) при короткой таблице.
+document.querySelectorAll('.filter-dropdown').forEach(d => {
+    document.body.appendChild(d);
+});
+
+function positionSheetsList(list, button) {
+    const anchor = button.closest('.sheets-cell') || button;
+    const rect = anchor.getBoundingClientRect();
+    const listWidth = Math.max(rect.width, 280);
+
+    let left = rect.left;
+    if (left + listWidth > window.innerWidth - 8) {
+        left = window.innerWidth - listWidth - 8;
+    }
+    if (left < 8) left = 8;
+
+    let top = rect.bottom + 4;
+    const maxHeight = parseInt(getComputedStyle(list).maxHeight) || 250;
+    if (top + maxHeight > window.innerHeight - 8 && rect.top - maxHeight - 4 > 0) {
+        // Если снизу не помещается, а сверху есть место — открываем вверх
+        top = rect.top - maxHeight - 4;
+    }
+
+    list.style.width = listWidth + 'px';
+    list.style.top = top + 'px';
+    list.style.left = left + 'px';
+}
+
+function closeAllSheetsLists() {
+    document.querySelectorAll('.sheets-list.show').forEach(el => {
+        el.classList.remove('show');
+    });
+    document.querySelectorAll('.spoiler-btn').forEach(btn => {
+        btn.textContent = 'Показать листы';
+    });
+}
+
+function positionFilterDropdown(dropdown, button) {
+    const anchor = button.closest('.column-header') || button;
+    const rect = anchor.getBoundingClientRect();
+    const dropdownWidth = dropdown.offsetWidth || 200;
+
+    let left = rect.left;
+    if (left + dropdownWidth > window.innerWidth - 8) {
+        left = window.innerWidth - dropdownWidth - 8;
+    }
+    if (left < 8) left = 8;
+
+    let top = rect.bottom + 2;
+    const maxHeight = parseInt(getComputedStyle(dropdown).maxHeight) || 250;
+    if (top + maxHeight > window.innerHeight - 8 && rect.top - maxHeight - 2 > 0) {
+        // Если снизу не помещается, а сверху есть место — открываем вверх
+        top = rect.top - maxHeight - 2;
+    }
+
+    dropdown.style.top = top + 'px';
+    dropdown.style.left = left + 'px';
+}
+
+function closeAllFilterDropdowns() {
+    document.querySelectorAll('.filter-dropdown').forEach(d => {
+        d.style.display = 'none';
+    });
+}
+
 document.querySelectorAll('.filter-btn').forEach(button => {
     button.addEventListener('click', function(e) {
         e.stopPropagation();
         const targetId = this.dataset.target;
         const dropdown = document.getElementById(targetId);
-        
-        document.querySelectorAll('.filter-dropdown').forEach(d => {
-            if (d !== dropdown) d.style.display = 'none';
-        });
-        
-        dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-        
-        if (targetId === 'filter-dropdown-name' && dropdown.style.display === 'block') {
-            setTimeout(() => searchInput.focus(), 0);
+
+        const willOpen = dropdown.style.display !== 'block';
+
+        closeAllFilterDropdowns();
+
+        if (willOpen) {
+            dropdown.style.display = 'block';
+            positionFilterDropdown(dropdown, this);
+
+            if (targetId === 'filter-dropdown-name') {
+                setTimeout(() => searchInput.focus(), 0);
+            }
         }
     });
 });
 
 document.addEventListener('click', function(e) {
     if (!e.target.closest('.filter-dropdown') && !e.target.closest('.filter-btn')) {
-        document.querySelectorAll('.filter-dropdown').forEach(d => {
-            d.style.display = 'none';
-        });
+        closeAllFilterDropdowns();
     }
+});
+
+// Закрываем дропдаун при скролле таблицы или страницы, чтобы он не "отрывался" от кнопки.
+// Но скролл внутри самого дропдауна (списка фильтров или списка листов) закрывать его не должен.
+const tableContainerEl = document.getElementById('tableContainer');
+if (tableContainerEl) {
+    tableContainerEl.addEventListener('scroll', function() {
+        closeAllFilterDropdowns();
+        closeAllSheetsLists();
+    });
+}
+window.addEventListener('scroll', function(e) {
+    if (e.target.closest && (e.target.closest('.filter-dropdown') || e.target.closest('.sheets-list'))) {
+        return;
+    }
+    closeAllFilterDropdowns();
+    closeAllSheetsLists();
+}, true);
+window.addEventListener('resize', function() {
+    closeAllFilterDropdowns();
+    closeAllSheetsLists();
 });
 
 function setupHeaderFixation() {
@@ -1529,6 +1611,9 @@ function updateResults(data, processedSheetsCount) {
             sheetsList.appendChild(expandBtn);
             
             cellContent.appendChild(sheetsList);
+            // Переносим список в конец <body>, чтобы он не обрезался
+            // скроллящимся .table-container при позиционировании через position: fixed.
+            document.body.appendChild(sheetsList);
             
             spoilerBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
@@ -1548,7 +1633,7 @@ function updateResults(data, processedSheetsCount) {
                     
                     sheetsList.classList.add('show');
                     this.textContent = 'Скрыть листы';
-                    sheetsList.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    positionSheetsList(sheetsList, this);
                 }
             });
         }
