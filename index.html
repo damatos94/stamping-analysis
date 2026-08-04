@@ -25,6 +25,7 @@
 --warning-bg: #fff59d;
 --warehouse-bg: #e3f2fd;
 --total-bg: #f1f8e9;
+--money-bg: #fff8e1; /* Новый цвет для денег */
 --sheets-bg: #fff3e0;
 --sheets-btn-bg: #ff9800;
 --sheets-btn-hover: #f57c00;
@@ -45,6 +46,7 @@
 --filter-text: #333;
 --warehouse-text: #333;
 --total-text: #333;
+--money-text: #333;
 --center-text: #333;
 }
 .dark-theme {
@@ -67,6 +69,7 @@
 --warning-bg: #795548;
 --warehouse-bg: #1565c0;
 --total-bg: #388e3c;
+--money-bg: #4e342e;
 --sheets-bg: #f57c00;
 --sheets-btn-bg: #ff9800;
 --sheets-btn-hover: #ffb74d;
@@ -87,6 +90,7 @@
 --filter-text: #e0e0e0;
 --warehouse-text: white;
 --total-text: white;
+--money-text: #ffecb3;
 --center-text: white;
 }
 body {
@@ -216,7 +220,7 @@ padding: 15px;
 border-radius: 5px;
 margin: 0 0 20px 0;
 display: none;
-grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 gap: 12px;
 transition: background-color 0.3s;
 }
@@ -253,7 +257,7 @@ border-collapse: separate;
 border-spacing: 0;
 margin-top: 15px;
 display: none;
-min-width: 900px;
+min-width: 1000px;
 color: var(--text-color);
 font-size: 13px;
 }
@@ -369,6 +373,11 @@ color: var(--warehouse-text);
 background-color: var(--total-bg);
 font-weight: bold;
 color: var(--total-text);
+}
+.money-cell {
+background-color: var(--money-bg);
+font-weight: bold;
+color: var(--money-text);
 }
 .sheets-cell {
 background-color: var(--sheets-bg);
@@ -742,6 +751,11 @@ flex: 1;
 <p>Сумма по столбцу S</p>
 </div>
 <div class="summary-item">
+<h4>Сумма в рублях</h4>
+<div class="summary-value" id="totalMoney">0</div>
+<p>Сумма по столбцу U</p>
+</div>
+<div class="summary-item">
 <h4>Обработано листов</h4>
 <div class="summary-value" id="totalSheets">0</div>
 <p>Количество листов с данными</p>
@@ -792,6 +806,14 @@ flex: 1;
 <th class="column-header">
 <div class="header-content-wrapper">
 <div style="line-height: 1.1;">
+Сумма, ₽
+<span class="column-tooltip">Сумма столбца U</span>
+</div>
+</div>
+</th>
+<th class="column-header">
+<div class="header-content-wrapper">
+<div style="line-height: 1.1;">
 Листы
 <span class="column-tooltip">Кнопка показывает список листов</span>
 </div>
@@ -819,6 +841,7 @@ flex: 1;
 <td style="font-weight: bold; background-color: var(--hover-row-bg);">ИТОГО:</td>
 <td class="total-cell" id="grandTotalQuantity">0</td>
 <td class="warehouse-cell" id="grandTotalWarehouse">0</td>
+<td class="money-cell" id="grandTotalMoney">0</td>
 <td class="sheets-cell" id="grandTotalSheets">
     <div class="sheets-cell-content">
         <div class="sheets-count-container">
@@ -858,10 +881,12 @@ const summary = document.getElementById('summary');
 const totalItems = document.getElementById('totalItems');
 const totalQuantity = document.getElementById('totalQuantity');
 const totalWarehouse = document.getElementById('totalWarehouse');
+const totalMoney = document.getElementById('totalMoney');
 const totalSheets = document.getElementById('totalSheets');
 const totalRow = document.getElementById('totalRow');
 const grandTotalQuantity = document.getElementById('grandTotalQuantity');
 const grandTotalWarehouse = document.getElementById('grandTotalWarehouse');
+const grandTotalMoney = document.getElementById('grandTotalMoney');
 const grandTotalSheetsCount = document.querySelector('#grandTotalSheets .sheets-count');
 const searchInput = document.getElementById('searchInput');
 const filterItemsContainerName = document.getElementById('filter-items-container-name');
@@ -986,8 +1011,14 @@ function processFile(file) {
                         if (row[18] !== undefined && row[18] !== '') {
                             warehouseValue = parseFloat(row[18]) || 0;
                         }
-                        // ИСПРАВЛЕНО: теперь учитываем отрицательные значения
-                        if (quantity !== 0 || warehouseValue !== 0) {
+                        
+                        // Чтение столбца U (индекс 20) - Сумма в рублях
+                        let moneyValue = 0;
+                        if (row[20] !== undefined && row[20] !== '') {
+                            moneyValue = parseFloat(row[20]) || 0;
+                        }
+
+                        if (quantity !== 0 || warehouseValue !== 0 || moneyValue !== 0) {
                             hasData = true;
                             let existingKey = null;
                             for (const key in summaryData) {
@@ -1000,15 +1031,18 @@ function processFile(file) {
                                 const existingItem = summaryData[existingKey];
                                 existingItem.total += quantity;
                                 existingItem.warehouse += warehouseValue;
+                                existingItem.money += moneyValue;
                                 existingItem.sheets.add(sheetName);
                                 if (!existingItem.sheetsData[sheetName]) {
                                     existingItem.sheetsData[sheetName] = {
                                         stamping: 0,
-                                        warehouse: 0
+                                        warehouse: 0,
+                                        money: 0
                                     };
                                 }
                                 existingItem.sheetsData[sheetName].stamping += quantity;
                                 existingItem.sheetsData[sheetName].warehouse += warehouseValue;
+                                existingItem.sheetsData[sheetName].money += moneyValue;
                                 existingItem.workingCenters.add(workingCenter);
                                 if (!existingItem.workingCentersData[workingCenter]) {
                                     existingItem.workingCentersData[workingCenter] = 0;
@@ -1020,24 +1054,28 @@ function processFile(file) {
                                         sheets: new Set(),
                                         sheetsArray: [],
                                         total: 0,
-                                        warehouse: 0
+                                        warehouse: 0,
+                                        money: 0
                                     };
                                 }
                                 const centerData = existingItem.centerSheetsData[workingCenter];
                                 if (!centerData.sheetsData[sheetName]) {
                                     centerData.sheetsData[sheetName] = {
                                         stamping: 0,
-                                        warehouse: 0
+                                        warehouse: 0,
+                                        money: 0
                                     };
                                 }
                                 centerData.sheetsData[sheetName].stamping += quantity;
                                 centerData.sheetsData[sheetName].warehouse += warehouseValue;
+                                centerData.sheetsData[sheetName].money += moneyValue;
                                 centerData.sheets.add(sheetName);
                                 if (!centerData.sheetsArray.includes(sheetName)) {
                                     centerData.sheetsArray.push(sheetName);
                                 }
                                 centerData.total += quantity;
                                 centerData.warehouse += warehouseValue;
+                                centerData.money += moneyValue;
                                 if (!existingItem.sheetsArray.includes(sheetName)) {
                                     existingItem.sheetsArray.push(sheetName);
                                 }
@@ -1045,12 +1083,14 @@ function processFile(file) {
                                 summaryData[itemName] = {
                                     total: quantity,
                                     warehouse: warehouseValue,
+                                    money: moneyValue,
                                     sheets: new Set([sheetName]),
                                     sheetsArray: [sheetName],
                                     sheetsData: {
                                         [sheetName]: {
                                             stamping: quantity,
-                                            warehouse: warehouseValue
+                                            warehouse: warehouseValue,
+                                            money: moneyValue
                                         }
                                     },
                                     workingCenters: new Set([workingCenter]),
@@ -1062,13 +1102,15 @@ function processFile(file) {
                                             sheetsData: {
                                                 [sheetName]: {
                                                     stamping: quantity,
-                                                    warehouse: warehouseValue
+                                                    warehouse: warehouseValue,
+                                                    money: moneyValue
                                                 }
                                             },
                                             sheets: new Set([sheetName]),
                                             sheetsArray: [sheetName],
                                             total: quantity,
-                                            warehouse: warehouseValue
+                                            warehouse: warehouseValue,
+                                            money: moneyValue
                                         }
                                     }
                                 };
@@ -1086,6 +1128,7 @@ function processFile(file) {
                     name,
                     total: info.total,
                     warehouse: info.warehouse,
+                    money: info.money,
                     sheetCount: info.sheets.size,
                     sheetsArray: info.sheetsArray,
                     sheetsData: info.sheetsData,
@@ -1270,7 +1313,7 @@ function applyFilters() {
     
     rows.forEach(row => {
         const name = row.cells[0].textContent;
-        const centerCell = row.cells[4];
+        const centerCell = row.cells[5]; // Индекс сместился из-за нового столбца
         const centerValue = centerCell.textContent;
         
         let nameMatch = true;
@@ -1306,22 +1349,26 @@ function updateTotalsForVisibleRows() {
     const rows = resultsBody.querySelectorAll('tr');
     let visibleTotalQty = 0;
     let visibleTotalWarehouse = 0;
+    let visibleTotalMoney = 0;
     let visibleTotalSheets = 0;
     
     rows.forEach(row => {
         if (row.style.display !== 'none') {
             const qtyCell = row.cells[1];
             const warehouseCell = row.cells[2];
-            const sheetsCell = row.cells[3];
+            const moneyCell = row.cells[3];
+            const sheetsCell = row.cells[4];
             
             visibleTotalQty += parseFloat(qtyCell.textContent.replace(/\s/g, '')) || 0;
             visibleTotalWarehouse += parseFloat(warehouseCell.textContent.replace(/\s/g, '')) || 0;
+            visibleTotalMoney += parseFloat(moneyCell.textContent.replace(/\s/g, '')) || 0;
             visibleTotalSheets += parseInt(sheetsCell.querySelector('.sheets-count')?.textContent || 0);
         }
     });
     
     grandTotalQuantity.textContent = formatNumber(visibleTotalQty);
     grandTotalWarehouse.textContent = formatNumber(visibleTotalWarehouse);
+    grandTotalMoney.textContent = formatMoney(visibleTotalMoney);
     grandTotalSheetsCount.textContent = visibleTotalSheets;
 }
 
@@ -1372,6 +1419,7 @@ function updateResults(data, processedSheetsCount) {
     
     let grandTotalQty = 0;
     let grandTotalWarehouseVal = 0;
+    let grandTotalMoneyVal = 0;
     
     data.forEach((item, index) => {
         const row = document.createElement('tr');
@@ -1386,6 +1434,10 @@ function updateResults(data, processedSheetsCount) {
         const warehouseCell = document.createElement('td');
         warehouseCell.textContent = formatNumber(item.warehouse);
         warehouseCell.className = 'warehouse-cell';
+
+        const moneyCell = document.createElement('td');
+        moneyCell.textContent = formatMoney(item.money);
+        moneyCell.className = 'money-cell';
         
         const sheetsCell = document.createElement('td');
         sheetsCell.className = 'sheets-cell';
@@ -1441,7 +1493,6 @@ function updateResults(data, processedSheetsCount) {
             
             const sortedSheets = [...item.sheetsArray].sort();
             
-            // ИСПРАВЛЕНО: показываем все значения, включая отрицательные
             sortedSheets.forEach(sheetName => {
                 const sheetInfo = item.sheetsData[sheetName];
                 if (!sheetInfo) return;
@@ -1512,6 +1563,7 @@ function updateResults(data, processedSheetsCount) {
         row.appendChild(nameCell);
         row.appendChild(totalCell);
         row.appendChild(warehouseCell);
+        row.appendChild(moneyCell);
         row.appendChild(sheetsCell);
         row.appendChild(centerCell);
         
@@ -1519,16 +1571,19 @@ function updateResults(data, processedSheetsCount) {
         
         grandTotalQty += item.total;
         grandTotalWarehouseVal += item.warehouse;
+        grandTotalMoneyVal += item.money;
     });
     
     const totalItemsCount = data.length;
     totalItems.textContent = totalItemsCount;
     totalQuantity.textContent = formatNumber(grandTotalQty);
     totalWarehouse.textContent = formatNumber(grandTotalWarehouseVal);
+    totalMoney.textContent = formatMoney(grandTotalMoneyVal);
     totalSheets.textContent = processedSheetsCount;
     
     grandTotalQuantity.textContent = formatNumber(grandTotalQty);
     grandTotalWarehouse.textContent = formatNumber(grandTotalWarehouseVal);
+    grandTotalMoney.textContent = formatMoney(grandTotalMoneyVal);
     grandTotalSheetsCount.textContent = processedSheetsCount;
     
     resultsTable.style.display = 'table';
@@ -1586,7 +1641,6 @@ function openFullSheetsModal(item, index) {
         const stampingItems = [];
         const warehouseItems = [];
         
-        // ИСПРАВЛЕНО: показываем все значения, включая отрицательные
         sortedSheets.forEach(sheetName => {
             const sheetInfo = item.sheetsData[sheetName];
             if (!sheetInfo) return;
@@ -1675,6 +1729,7 @@ function exportToExcel() {
             'Номенклатура', 
             'Отштамповано', 
             'Склад', 
+            'Сумма в рублях',
             'Количество листов',
             'Листы со штамповкой', 
             'Листы со сдачей на склад'
@@ -1708,6 +1763,7 @@ function exportToExcel() {
                 item.name,
                 item.total,
                 item.warehouse,
+                item.money,
                 item.sheetCount,
                 stampingSheets.join('; '),
                 warehouseSheets.join('; ')
@@ -1729,8 +1785,9 @@ function exportToExcel() {
         
         const totalQty = currentData.reduce((sum, item) => sum + item.total, 0);
         const totalWarehouseVal = currentData.reduce((sum, item) => sum + item.warehouse, 0);
+        const totalMoneyVal = currentData.reduce((sum, item) => sum + item.money, 0);
         
-        const totalRow = ['ИТОГО', totalQty, totalWarehouseVal, '', '', ''];
+        const totalRow = ['ИТОГО', totalQty, totalWarehouseVal, totalMoneyVal, '', '', ''];
         for (let i = 0; i < maxCenters; i++) {
             totalRow.push('');
         }
@@ -1758,6 +1815,13 @@ function formatNumber(num) {
             maximumFractionDigits: 2
         });
     }
+}
+
+function formatMoney(num) {
+    return num.toLocaleString('ru-RU', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }) + ' ₽';
 }
 
 function showError(message) {
