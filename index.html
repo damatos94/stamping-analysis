@@ -964,7 +964,16 @@ fileInput.addEventListener('change', function(e) {
     }
 });
 
+// ===== ИСПРАВЛЕНИЕ: Функция очистки старых данных листов =====
+function clearOldSheetsData() {
+    document.querySelectorAll('.sheets-list').forEach(el => el.remove());
+    document.querySelectorAll('.full-sheets-modal').forEach(el => el.remove());
+    sheetsOverlay.classList.remove('show');
+}
+// ===== КОНЕЦ ИСПРАВЛЕНИЯ =====
+
 function processFile(file) {
+    clearOldSheetsData(); // ===== ИСПРАВЛЕНИЕ: Вызов очистки =====
     resultsTable.style.display = 'none';
     summary.style.display = 'none';
     error.style.display = 'none';
@@ -1906,7 +1915,7 @@ function formatMoney(num) {
     return num.toLocaleString('ru-RU', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
-    }) + ' ₽';
+    });
 }
 
 function showError(message) {
