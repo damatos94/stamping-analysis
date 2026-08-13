@@ -25,7 +25,7 @@
 --warning-bg: #fff59d;
 --warehouse-bg: #e3f2fd;
 --total-bg: #f1f8e9;
---money-bg: #fff8e1; /* Новый цвет для денег */
+--money-bg: #fff8e1;
 --sheets-bg: #fff3e0;
 --sheets-btn-bg: #ff9800;
 --sheets-btn-hover: #f57c00;
@@ -384,6 +384,7 @@ background-color: var(--sheets-bg);
 position: relative;
 }
 .spoiler-btn {
+white-space: nowrap;
 background-color: var(--sheets-btn-bg);
 color: white;
 border: none;
@@ -745,6 +746,11 @@ flex: 1;
 <p>Сумма по столбцу S</p>
 </div>
 <div class="summary-item">
+<h4>Тоннаж</h4>
+<div class="summary-value" id="totalTonnage">0</div>
+<p>Сумма по столбцу T</p>
+</div>
+<div class="summary-item">
 <h4>Сумма в рублях</h4>
 <div class="summary-value" id="totalMoney">0</div>
 <p>Сумма по столбцу U</p>
@@ -800,6 +806,14 @@ flex: 1;
 <th class="column-header">
 <div class="header-content-wrapper">
 <div style="line-height: 1.1;">
+Тоннаж
+<span class="column-tooltip">Сумма столбца T</span>
+</div>
+</div>
+</th>
+<th class="column-header">
+<div class="header-content-wrapper">
+<div style="line-height: 1.1;">
 Сумма, ₽
 <span class="column-tooltip">Сумма столбца U</span>
 </div>
@@ -835,6 +849,7 @@ flex: 1;
 <td style="font-weight: bold; background-color: var(--hover-row-bg);">ИТОГО:</td>
 <td class="total-cell" id="grandTotalQuantity">0</td>
 <td class="warehouse-cell" id="grandTotalWarehouse">0</td>
+<td class="total-cell" id="grandTotalTonnage">0</td>
 <td class="money-cell" id="grandTotalMoney">0</td>
 <td class="sheets-cell" id="grandTotalSheets">
     <div class="sheets-cell-content">
@@ -875,11 +890,13 @@ const summary = document.getElementById('summary');
 const totalItems = document.getElementById('totalItems');
 const totalQuantity = document.getElementById('totalQuantity');
 const totalWarehouse = document.getElementById('totalWarehouse');
+const totalTonnage = document.getElementById('totalTonnage');
 const totalMoney = document.getElementById('totalMoney');
 const totalSheets = document.getElementById('totalSheets');
 const totalRow = document.getElementById('totalRow');
 const grandTotalQuantity = document.getElementById('grandTotalQuantity');
 const grandTotalWarehouse = document.getElementById('grandTotalWarehouse');
+const grandTotalTonnage = document.getElementById('grandTotalTonnage');
 const grandTotalMoney = document.getElementById('grandTotalMoney');
 const grandTotalSheetsCount = document.querySelector('#grandTotalSheets .sheets-count');
 const searchInput = document.getElementById('searchInput');
@@ -1015,13 +1032,18 @@ function processFile(file) {
                             warehouseValue = parseFloat(row[18]) || 0;
                         }
                         
+                        let tonnageValue = 0;
+                        if (row[19] !== undefined && row[19] !== '') {
+                            tonnageValue = parseFloat(row[19]) || 0;
+                        }
+                        
                         // Чтение столбца U (индекс 20) - Сумма в рублях
                         let moneyValue = 0;
                         if (row[20] !== undefined && row[20] !== '') {
                             moneyValue = parseFloat(row[20]) || 0;
                         }
 
-                        if (quantity !== 0 || warehouseValue !== 0 || moneyValue !== 0) {
+                        if (quantity !== 0 || warehouseValue !== 0 || tonnageValue !== 0 || moneyValue !== 0) {
                             hasData = true;
                             let existingKey = null;
                             for (const key in summaryData) {
@@ -1034,17 +1056,20 @@ function processFile(file) {
                                 const existingItem = summaryData[existingKey];
                                 existingItem.total += quantity;
                                 existingItem.warehouse += warehouseValue;
+                                existingItem.tonnage += tonnageValue;
                                 existingItem.money += moneyValue;
                                 existingItem.sheets.add(sheetName);
                                 if (!existingItem.sheetsData[sheetName]) {
                                     existingItem.sheetsData[sheetName] = {
                                         stamping: 0,
                                         warehouse: 0,
+                                        tonnage: 0,
                                         money: 0
                                     };
                                 }
                                 existingItem.sheetsData[sheetName].stamping += quantity;
                                 existingItem.sheetsData[sheetName].warehouse += warehouseValue;
+                                existingItem.sheetsData[sheetName].tonnage += tonnageValue;
                                 existingItem.sheetsData[sheetName].money += moneyValue;
                                 existingItem.workingCenters.add(workingCenter);
                                 if (!existingItem.workingCentersData[workingCenter]) {
@@ -1058,6 +1083,7 @@ function processFile(file) {
                                         sheetsArray: [],
                                         total: 0,
                                         warehouse: 0,
+                                        tonnage: 0,
                                         money: 0
                                     };
                                 }
@@ -1066,11 +1092,13 @@ function processFile(file) {
                                     centerData.sheetsData[sheetName] = {
                                         stamping: 0,
                                         warehouse: 0,
+                                        tonnage: 0,
                                         money: 0
                                     };
                                 }
                                 centerData.sheetsData[sheetName].stamping += quantity;
                                 centerData.sheetsData[sheetName].warehouse += warehouseValue;
+                                centerData.sheetsData[sheetName].tonnage += tonnageValue;
                                 centerData.sheetsData[sheetName].money += moneyValue;
                                 centerData.sheets.add(sheetName);
                                 if (!centerData.sheetsArray.includes(sheetName)) {
@@ -1078,6 +1106,7 @@ function processFile(file) {
                                 }
                                 centerData.total += quantity;
                                 centerData.warehouse += warehouseValue;
+                                centerData.tonnage += tonnageValue;
                                 centerData.money += moneyValue;
                                 if (!existingItem.sheetsArray.includes(sheetName)) {
                                     existingItem.sheetsArray.push(sheetName);
@@ -1086,6 +1115,7 @@ function processFile(file) {
                                 summaryData[itemName] = {
                                     total: quantity,
                                     warehouse: warehouseValue,
+                                    tonnage: tonnageValue,
                                     money: moneyValue,
                                     sheets: new Set([sheetName]),
                                     sheetsArray: [sheetName],
@@ -1093,6 +1123,7 @@ function processFile(file) {
                                         [sheetName]: {
                                             stamping: quantity,
                                             warehouse: warehouseValue,
+                                            tonnage: tonnageValue,
                                             money: moneyValue
                                         }
                                     },
@@ -1106,6 +1137,7 @@ function processFile(file) {
                                                 [sheetName]: {
                                                     stamping: quantity,
                                                     warehouse: warehouseValue,
+                                                    tonnage: tonnageValue,
                                                     money: moneyValue
                                                 }
                                             },
@@ -1113,6 +1145,7 @@ function processFile(file) {
                                             sheetsArray: [sheetName],
                                             total: quantity,
                                             warehouse: warehouseValue,
+                                            tonnage: tonnageValue,
                                             money: moneyValue
                                         }
                                     }
@@ -1131,6 +1164,7 @@ function processFile(file) {
                     name,
                     total: info.total,
                     warehouse: info.warehouse,
+                    tonnage: info.tonnage,
                     money: info.money,
                     sheetCount: info.sheets.size,
                     sheetsArray: info.sheetsArray,
@@ -1316,7 +1350,7 @@ function applyFilters() {
     
     rows.forEach(row => {
         const name = row.cells[0].textContent;
-        const centerCell = row.cells[5]; // Индекс сместился из-за нового столбца
+        const centerCell = row.cells[6]; // Индекс 6 - Рабочий центр (сместился после добавления Тоннаж)
         const centerValue = centerCell.textContent;
         
         let nameMatch = true;
@@ -1352,6 +1386,7 @@ function updateTotalsForVisibleRows() {
     const rows = resultsBody.querySelectorAll('tr');
     let visibleTotalQty = 0;
     let visibleTotalWarehouse = 0;
+    let visibleTotalTonnage = 0;
     let visibleTotalMoney = 0;
     let visibleTotalSheets = 0;
     
@@ -1359,11 +1394,13 @@ function updateTotalsForVisibleRows() {
         if (row.style.display !== 'none') {
             const qtyCell = row.cells[1];
             const warehouseCell = row.cells[2];
-            const moneyCell = row.cells[3];
-            const sheetsCell = row.cells[4];
+            const tonnageCell = row.cells[3];
+            const moneyCell = row.cells[4];
+            const sheetsCell = row.cells[5];
             
             visibleTotalQty += parseFloat(qtyCell.textContent.replace(/\s/g, '')) || 0;
             visibleTotalWarehouse += parseFloat(warehouseCell.textContent.replace(/\s/g, '')) || 0;
+            visibleTotalTonnage += parseFloat(tonnageCell.textContent.replace(/\s/g, '')) || 0;
             visibleTotalMoney += parseFloat(moneyCell.textContent.replace(/\s/g, '')) || 0;
             visibleTotalSheets += parseInt(sheetsCell.querySelector('.sheets-count')?.textContent || 0);
         }
@@ -1371,6 +1408,7 @@ function updateTotalsForVisibleRows() {
     
     grandTotalQuantity.textContent = formatNumber(visibleTotalQty);
     grandTotalWarehouse.textContent = formatNumber(visibleTotalWarehouse);
+    grandTotalTonnage.textContent = formatNumber(visibleTotalTonnage);
     grandTotalMoney.textContent = formatMoney(visibleTotalMoney);
     grandTotalSheetsCount.textContent = visibleTotalSheets;
 }
@@ -1510,6 +1548,7 @@ function updateResults(data, processedSheetsCount) {
     
     let grandTotalQty = 0;
     let grandTotalWarehouseVal = 0;
+    let grandTotalTonnageVal = 0;
     let grandTotalMoneyVal = 0;
     
     data.forEach((item, index) => {
@@ -1525,6 +1564,10 @@ function updateResults(data, processedSheetsCount) {
         const warehouseCell = document.createElement('td');
         warehouseCell.textContent = formatNumber(item.warehouse);
         warehouseCell.className = 'warehouse-cell';
+
+        const tonnageCell = document.createElement('td');
+        tonnageCell.textContent = formatNumber(item.tonnage);
+        tonnageCell.className = 'total-cell';
 
         const moneyCell = document.createElement('td');
         moneyCell.textContent = formatMoney(item.money);
@@ -1657,6 +1700,7 @@ function updateResults(data, processedSheetsCount) {
         row.appendChild(nameCell);
         row.appendChild(totalCell);
         row.appendChild(warehouseCell);
+        row.appendChild(tonnageCell);
         row.appendChild(moneyCell);
         row.appendChild(sheetsCell);
         row.appendChild(centerCell);
@@ -1665,6 +1709,7 @@ function updateResults(data, processedSheetsCount) {
         
         grandTotalQty += item.total;
         grandTotalWarehouseVal += item.warehouse;
+        grandTotalTonnageVal += item.tonnage;
         grandTotalMoneyVal += item.money;
     });
     
@@ -1672,11 +1717,13 @@ function updateResults(data, processedSheetsCount) {
     totalItems.textContent = totalItemsCount;
     totalQuantity.textContent = formatNumber(grandTotalQty);
     totalWarehouse.textContent = formatNumber(grandTotalWarehouseVal);
+    totalTonnage.textContent = formatNumber(grandTotalTonnageVal);
     totalMoney.textContent = formatMoney(grandTotalMoneyVal);
     totalSheets.textContent = processedSheetsCount;
     
     grandTotalQuantity.textContent = formatNumber(grandTotalQty);
     grandTotalWarehouse.textContent = formatNumber(grandTotalWarehouseVal);
+    grandTotalTonnage.textContent = formatNumber(grandTotalTonnageVal);
     grandTotalMoney.textContent = formatMoney(grandTotalMoneyVal);
     grandTotalSheetsCount.textContent = processedSheetsCount;
     
@@ -1823,6 +1870,7 @@ function exportToExcel() {
             'Номенклатура', 
             'Отштамповано', 
             'Склад', 
+            'Тоннаж',
             'Сумма в рублях',
             'Количество листов',
             'Листы со штамповкой', 
@@ -1857,6 +1905,7 @@ function exportToExcel() {
                 item.name,
                 item.total,
                 item.warehouse,
+                item.tonnage,
                 item.money,
                 item.sheetCount,
                 stampingSheets.join('; '),
@@ -1879,9 +1928,10 @@ function exportToExcel() {
         
         const totalQty = currentData.reduce((sum, item) => sum + item.total, 0);
         const totalWarehouseVal = currentData.reduce((sum, item) => sum + item.warehouse, 0);
+        const totalTonnageVal = currentData.reduce((sum, item) => sum + item.tonnage, 0);
         const totalMoneyVal = currentData.reduce((sum, item) => sum + item.money, 0);
         
-        const totalRow = ['ИТОГО', totalQty, totalWarehouseVal, totalMoneyVal, '', '', ''];
+        const totalRow = ['ИТОГО', totalQty, totalWarehouseVal, totalTonnageVal, totalMoneyVal, '', '', ''];
         for (let i = 0; i < maxCenters; i++) {
             totalRow.push('');
         }
