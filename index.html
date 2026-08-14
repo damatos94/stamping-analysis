@@ -26,6 +26,8 @@
 --warehouse-bg: #e3f2fd;
 --total-bg: #f1f8e9;
 --money-bg: #fff8e1;
+--tonnage-bg: #f3e5f5;
+--tonnage-text: #333;
 --sheets-bg: #fff3e0;
 --sheets-btn-bg: #ff9800;
 --sheets-btn-hover: #f57c00;
@@ -70,6 +72,8 @@
 --warehouse-bg: #1565c0;
 --total-bg: #388e3c;
 --money-bg: #4e342e;
+--tonnage-bg: #2c2138;
+--tonnage-text: #a89bc9;
 --sheets-bg: #f57c00;
 --sheets-btn-bg: #ff9800;
 --sheets-btn-hover: #ffb74d;
@@ -379,12 +383,16 @@ background-color: var(--money-bg);
 font-weight: bold;
 color: var(--money-text);
 }
+.tonnage-cell {
+background-color: var(--tonnage-bg);
+font-weight: bold;
+color: var(--tonnage-text);
+}
 .sheets-cell {
 background-color: var(--sheets-bg);
 position: relative;
 }
 .spoiler-btn {
-white-space: nowrap;
 background-color: var(--sheets-btn-bg);
 color: white;
 border: none;
@@ -394,6 +402,7 @@ cursor: pointer;
 font-size: 11px;
 margin-left: 8px;
 transition: background-color 0.3s;
+white-space: nowrap;
 }
 .spoiler-btn:hover {
 background-color: var(--sheets-btn-hover);
@@ -746,12 +755,12 @@ flex: 1;
 <p>Сумма по столбцу S</p>
 </div>
 <div class="summary-item">
-<h4>Тоннаж</h4>
+<h4>Тоннаж сдачи на склад</h4>
 <div class="summary-value" id="totalTonnage">0</div>
 <p>Сумма по столбцу T</p>
 </div>
 <div class="summary-item">
-<h4>Сумма в рублях</h4>
+<h4>Сумма ₽ сдачи на склад</h4>
 <div class="summary-value" id="totalMoney">0</div>
 <p>Сумма по столбцу U</p>
 </div>
@@ -806,7 +815,7 @@ flex: 1;
 <th class="column-header">
 <div class="header-content-wrapper">
 <div style="line-height: 1.1;">
-Тоннаж
+Тоннаж сдачи на склад
 <span class="column-tooltip">Сумма столбца T</span>
 </div>
 </div>
@@ -814,7 +823,7 @@ flex: 1;
 <th class="column-header">
 <div class="header-content-wrapper">
 <div style="line-height: 1.1;">
-Сумма, ₽
+Сумма ₽ сдачи на склад
 <span class="column-tooltip">Сумма столбца U</span>
 </div>
 </div>
@@ -849,7 +858,7 @@ flex: 1;
 <td style="font-weight: bold; background-color: var(--hover-row-bg);">ИТОГО:</td>
 <td class="total-cell" id="grandTotalQuantity">0</td>
 <td class="warehouse-cell" id="grandTotalWarehouse">0</td>
-<td class="total-cell" id="grandTotalTonnage">0</td>
+<td class="tonnage-cell" id="grandTotalTonnage">0</td>
 <td class="money-cell" id="grandTotalMoney">0</td>
 <td class="sheets-cell" id="grandTotalSheets">
     <div class="sheets-cell-content">
@@ -981,16 +990,14 @@ fileInput.addEventListener('change', function(e) {
     }
 });
 
-// ===== ИСПРАВЛЕНИЕ: Функция очистки старых данных листов =====
 function clearOldSheetsData() {
     document.querySelectorAll('.sheets-list').forEach(el => el.remove());
     document.querySelectorAll('.full-sheets-modal').forEach(el => el.remove());
     sheetsOverlay.classList.remove('show');
 }
-// ===== КОНЕЦ ИСПРАВЛЕНИЯ =====
 
 function processFile(file) {
-    clearOldSheetsData(); // ===== ИСПРАВЛЕНИЕ: Вызов очистки =====
+    clearOldSheetsData();
     resultsTable.style.display = 'none';
     summary.style.display = 'none';
     error.style.display = 'none';
@@ -1037,7 +1044,6 @@ function processFile(file) {
                             tonnageValue = parseFloat(row[19]) || 0;
                         }
                         
-                        // Чтение столбца U (индекс 20) - Сумма в рублях
                         let moneyValue = 0;
                         if (row[20] !== undefined && row[20] !== '') {
                             moneyValue = parseFloat(row[20]) || 0;
@@ -1350,7 +1356,7 @@ function applyFilters() {
     
     rows.forEach(row => {
         const name = row.cells[0].textContent;
-        const centerCell = row.cells[6]; // Индекс 6 - Рабочий центр (сместился после добавления Тоннаж)
+        const centerCell = row.cells[6];
         const centerValue = centerCell.textContent;
         
         let nameMatch = true;
@@ -1413,8 +1419,6 @@ function updateTotalsForVisibleRows() {
     grandTotalSheetsCount.textContent = visibleTotalSheets;
 }
 
-// Переносим дропдауны фильтров в конец <body>, чтобы они не обрезались
-// скроллящимся .table-container (overflow-y: auto) при короткой таблице.
 document.querySelectorAll('.filter-dropdown').forEach(d => {
     document.body.appendChild(d);
 });
@@ -1433,7 +1437,6 @@ function positionSheetsList(list, button) {
     let top = rect.bottom + 4;
     const maxHeight = parseInt(getComputedStyle(list).maxHeight) || 250;
     if (top + maxHeight > window.innerHeight - 8 && rect.top - maxHeight - 4 > 0) {
-        // Если снизу не помещается, а сверху есть место — открываем вверх
         top = rect.top - maxHeight - 4;
     }
 
@@ -1465,7 +1468,6 @@ function positionFilterDropdown(dropdown, button) {
     let top = rect.bottom + 2;
     const maxHeight = parseInt(getComputedStyle(dropdown).maxHeight) || 250;
     if (top + maxHeight > window.innerHeight - 8 && rect.top - maxHeight - 2 > 0) {
-        // Если снизу не помещается, а сверху есть место — открываем вверх
         top = rect.top - maxHeight - 2;
     }
 
@@ -1506,8 +1508,6 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// Закрываем дропдаун при скролле таблицы или страницы, чтобы он не "отрывался" от кнопки.
-// Но скролл внутри самого дропдауна (списка фильтров или списка листов) закрывать его не должен.
 const tableContainerEl = document.getElementById('tableContainer');
 if (tableContainerEl) {
     tableContainerEl.addEventListener('scroll', function() {
@@ -1567,7 +1567,7 @@ function updateResults(data, processedSheetsCount) {
 
         const tonnageCell = document.createElement('td');
         tonnageCell.textContent = formatNumber(item.tonnage);
-        tonnageCell.className = 'total-cell';
+        tonnageCell.className = 'tonnage-cell';
 
         const moneyCell = document.createElement('td');
         moneyCell.textContent = formatMoney(item.money);
@@ -1663,8 +1663,6 @@ function updateResults(data, processedSheetsCount) {
             sheetsList.appendChild(expandBtn);
             
             cellContent.appendChild(sheetsList);
-            // Переносим список в конец <body>, чтобы он не обрезался
-            // скроллящимся .table-container при позиционировании через position: fixed.
             document.body.appendChild(sheetsList);
             
             spoilerBtn.addEventListener('click', function(e) {
@@ -1870,8 +1868,8 @@ function exportToExcel() {
             'Номенклатура', 
             'Отштамповано', 
             'Склад', 
-            'Тоннаж',
-            'Сумма в рублях',
+            'Тоннаж сдачи на склад',
+            'Сумма ₽ сдачи на склад',
             'Количество листов',
             'Листы со штамповкой', 
             'Листы со сдачей на склад'
