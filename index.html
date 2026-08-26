@@ -55,6 +55,12 @@
 --merge-btn-hover: #455a64;
 --filter-active: #ff9800;
 --filter-active-glow: rgba(255,152,0,0.6);
+--stamp-btn-bg: #c8e6c9;
+--stamp-btn-hover: #a5d6a7;
+--stamp-btn-text: #1b5e20;
+--warehouse-btn-bg: #bbdefb;
+--warehouse-btn-hover: #90caf9;
+--warehouse-btn-text: #0d47a1;
 }
 .dark-theme {
 --bg-color: #121212;
@@ -106,6 +112,12 @@
 --merge-btn-hover: #607d8b;
 --filter-active: #ffa726;
 --filter-active-glow: rgba(255,167,38,0.7);
+--stamp-btn-bg: #388e3c;
+--stamp-btn-hover: #43a047;
+--stamp-btn-text: #e8f5e9;
+--warehouse-btn-bg: #1976d2;
+--warehouse-btn-hover: #2196f3;
+--warehouse-btn-text: #e3f2fd;
 }
 body {
 font-family: Arial, sans-serif;
@@ -605,6 +617,16 @@ position: relative;
 .sheets-count-container { display: flex; align-items: center; }
 .sheets-count { min-width: 30px; text-align: center; display: inline-block; }
 .sheets-btn-container { display: flex; justify-content: flex-end; flex: 1; }
+.stamp-cell .spoiler-btn {
+background-color: var(--stamp-btn-bg);
+color: var(--stamp-btn-text);
+}
+.stamp-cell .spoiler-btn:hover { background-color: var(--stamp-btn-hover); }
+.warehouse-cell .spoiler-btn {
+background-color: var(--warehouse-btn-bg);
+color: var(--warehouse-btn-text);
+}
+.warehouse-cell .spoiler-btn:hover { background-color: var(--warehouse-btn-hover); }
 </style>
 </head>
 <body>
