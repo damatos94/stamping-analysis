@@ -1,0 +1,1693 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Анализ отштампованных деталей</title>
+<style>
+:root {
+--bg-color: #f5f5f5;
+--container-bg: white;
+--text-color: #333;
+--header-bg: #4CAF50;
+--header-text: white;
+--table-header-bg: #4CAF50;
+--even-row-bg: #f9f9f9;
+--hover-row-bg: #f5f5f5;
+--summary-bg: #e8f5e9;
+--summary-item-bg: white;
+--border-color: #ddd;
+--input-border: #ddd;
+--input-bg: white;
+--button-hover: #45a049;
+--error-bg: #ffebee;
+--error-text: #f44336;
+--warning-bg: #fff59d;
+--stamp-bg: #e8f5e9;
+--stamp-light-bg: #f1f8e9;
+--warehouse-bg: #e3f2fd;
+--warehouse-light-bg: #f0f7ff;
+--sheets-bg: #fff3e0;
+--sheets-btn-bg: #ff9800;
+--sheets-btn-hover: #f57c00;
+--export-btn-bg: #2196F3;
+--export-btn-hover: #1976D2;
+--filter-bg: #f8f9fa;
+--center-bg: #e8f5fe;
+--close-btn-bg: #f44336;
+--close-btn-hover: #d32f2f;
+--spinner-border: #f3f3f3;
+--spinner-top: #4CAF50;
+--dropdown-bg: white;
+--dropdown-shadow: rgba(0,0,0,0.1);
+--select-all-bg: #4CAF50;
+--select-all-hover: #45a049;
+--deselect-bg: #f44336;
+--deselect-hover: #d32f2f;
+--filter-text: #333;
+--stamp-text: #333;
+--stamp-light-text: #333;
+--warehouse-text: #333;
+--warehouse-light-text: #333;
+--split-btn-bg: #9c27b0;
+--split-btn-hover: #7b1fa2;
+--merge-btn-bg: #607d8b;
+--merge-btn-hover: #455a64;
+--filter-active: #ff9800;
+--filter-active-glow: rgba(255,152,0,0.6);
+}
+.dark-theme {
+--bg-color: #121212;
+--container-bg: #1e1e1e;
+--text-color: #e0e0e0;
+--header-bg: #2e7d32;
+--header-text: #ffffff;
+--table-header-bg: #2e7d32;
+--even-row-bg: #252525;
+--hover-row-bg: #2a2a2a;
+--summary-bg: #1b5e20;
+--summary-item-bg: #252525;
+--border-color: #444;
+--input-border: #444;
+--input-bg: #2d2d2d;
+--button-hover: #256325;
+--error-bg: #441a1a;
+--error-text: #ef9a9a;
+--warning-bg: #795548;
+--stamp-bg: #2e7d32;
+--stamp-light-bg: #388e3c;
+--warehouse-bg: #1565c0;
+--warehouse-light-bg: #1976d2;
+--sheets-bg: #f57c00;
+--sheets-btn-bg: #ff9800;
+--sheets-btn-hover: #ffb74d;
+--export-btn-bg: #1976D2;
+--export-btn-hover: #1565c0;
+--filter-bg: #252525;
+--center-bg: #1565c0;
+--close-btn-bg: #d32f2f;
+--close-btn-hover: #c62828;
+--spinner-border: #333;
+--spinner-top: #66bb6a;
+--dropdown-bg: #252525;
+--dropdown-shadow: rgba(0,0,0,0.5);
+--select-all-bg: #2e7d32;
+--select-all-hover: #256325;
+--deselect-bg: #d32f2f;
+--deselect-hover: #c62828;
+--filter-text: #e0e0e0;
+--stamp-text: #e0e0e0;
+--stamp-light-text: #e0e0e0;
+--warehouse-text: #e0e0e0;
+--warehouse-light-text: #e0e0e0;
+--split-btn-bg: #ab47bc;
+--split-btn-hover: #8e24aa;
+--merge-btn-bg: #78909c;
+--merge-btn-hover: #607d8b;
+--filter-active: #ffa726;
+--filter-active-glow: rgba(255,167,38,0.7);
+}
+body {
+font-family: Arial, sans-serif;
+max-width: 1400px;
+margin: 0 auto;
+padding: 20px;
+background-color: var(--bg-color);
+color: var(--text-color);
+transition: background-color 0.3s, color 0.3s;
+}
+.container {
+background-color: var(--container-bg);
+padding: 20px;
+border-radius: 8px;
+box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+position: relative;
+transition: background-color 0.3s;
+}
+.header-controls {
+display: flex;
+justify-content: space-between;
+align-items: flex-start;
+margin-bottom: 15px;
+gap: 15px;
+flex-wrap: wrap;
+}
+.header-left {
+display: flex;
+gap: 10px;
+flex-wrap: wrap;
+flex: 1;
+}
+.upload-container {
+flex: 1;
+min-width: 0;
+display: flex;
+flex-direction: column;
+gap: 5px;
+}
+.upload-header-btn {
+background-color: var(--header-bg);
+color: white;
+border: none;
+padding: 8px 16px;
+border-radius: 20px;
+cursor: pointer;
+font-size: 14px;
+font-weight: 500;
+transition: all 0.3s;
+height: 36px;
+white-space: nowrap;
+display: flex;
+align-items: center;
+justify-content: center;
+width: 100%;
+min-width: 200px;
+}
+.upload-header-btn:hover { background-color: var(--button-hover); }
+.export-header-btn {
+background-color: var(--export-btn-bg);
+color: white;
+border: none;
+padding: 8px 16px;
+border-radius: 20px;
+cursor: pointer;
+font-size: 14px;
+font-weight: 500;
+transition: all 0.3s;
+height: 36px;
+white-space: nowrap;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+}
+.export-header-btn:hover { background-color: var(--export-btn-hover); }
+.theme-toggle-header {
+background: none;
+border: none;
+color: var(--text-color);
+width: 36px;
+height: 36px;
+border-radius: 50%;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 16px;
+transition: all 0.3s;
+background-color: var(--input-bg);
+border: 1px solid var(--border-color);
+flex-shrink: 0;
+}
+.theme-toggle-header:hover { background-color: rgba(0,0,0,0.05); }
+.dark-theme .theme-toggle-header:hover { background-color: rgba(255,255,255,0.1); }
+.main-title {
+color: var(--header-text);
+background-color: var(--header-bg);
+padding: 10px 15px;
+border-radius: 6px;
+text-align: center;
+margin: 0 0 15px 0;
+font-size: 20px;
+font-weight: bold;
+transition: background-color 0.3s, color 0.3s;
+}
+.file-info {
+margin-top: 5px;
+font-size: 13px;
+color: var(--text-color);
+padding: 4px 8px;
+border-radius: 4px;
+background-color: var(--filter-bg);
+display: none;
+}
+.summary {
+background-color: var(--summary-bg);
+padding: 12px 15px;
+border-radius: 5px;
+margin: 0 0 20px 0;
+display: none;
+flex-direction: row;
+flex-wrap: nowrap;
+gap: 10px;
+transition: background-color 0.3s;
+overflow-x: auto;
+}
+.summary-item {
+background-color: var(--summary-item-bg);
+padding: 10px 12px;
+border-radius: 5px;
+box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+transition: background-color 0.3s;
+flex: 1 1 0;
+min-width: 130px;
+}
+.summary-item h4 {
+margin-top: 0;
+color: var(--text-color);
+border-bottom: 2px solid var(--header-bg);
+padding-bottom: 4px;
+transition: color 0.3s, border-color 0.3s;
+font-size: 12px;
+margin-bottom: 6px;
+white-space: nowrap;
+}
+.summary-value {
+font-size: 18px;
+font-weight: bold;
+color: var(--header-bg);
+margin: 0;
+transition: color 0.3s;
+}
+.results-section { margin-top: 0; overflow-x: auto; }
+.results-table {
+width: 100%;
+border-collapse: separate;
+border-spacing: 0;
+margin-top: 15px;
+display: none;
+min-width: 1200px;
+color: var(--text-color);
+font-size: 13px;
+}
+.results-table th, .results-table td {
+position: relative;
+border: 1px solid var(--border-color);
+}
+.results-table th {
+background-color: var(--table-header-bg);
+color: var(--header-text);
+padding: 0 !important;
+text-align: left;
+position: sticky;
+top: 0 !important;
+transition: background-color 0.2s, color 0.3s;
+font-weight: bold;
+font-size: 13px;
+line-height: 1.2;
+z-index: 20;
+box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+vertical-align: middle !important;
+height: 50px;
+cursor: pointer;
+user-select: none;
+}
+.results-table th:hover { background-color: var(--button-hover); }
+.results-table td {
+padding: 6px 8px;
+border-bottom: 1px solid var(--border-color);
+font-size: 13px;
+line-height: 1.2;
+}
+.results-table tr:hover { background-color: var(--hover-row-bg); }
+.results-table tr:nth-child(even) { background-color: var(--even-row-bg); }
+.loading { display: none; text-align: center; margin: 15px 0; }
+.spinner {
+border: 4px solid var(--spinner-border);
+border-top: 4px solid var(--spinner-top);
+border-radius: 50%;
+width: 40px;
+height: 40px;
+animation: spin 1s linear infinite;
+margin: 0 auto;
+transition: border-color 0.3s;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.error {
+color: var(--error-text);
+background-color: var(--error-bg);
+padding: 12px;
+border-radius: 5px;
+margin: 15px 0;
+display: none;
+transition: background-color 0.3s, color 0.3s;
+font-size: 14px;
+}
+.column-header { position: relative; height: 100%; }
+.header-content-wrapper {
+position: relative;
+padding: 8px 28px 8px 10px !important;
+height: 100%;
+display: flex;
+align-items: center;
+min-height: 40px;
+box-sizing: border-box;
+}
+th[data-sort="asc"] .header-content-wrapper::after { content: " ▲"; font-size: 10px; }
+th[data-sort="desc"] .header-content-wrapper::after { content: " ▼"; font-size: 10px; }
+.filter-btn {
+position: absolute;
+right: 5px;
+top: 50%;
+transform: translateY(-50%);
+margin: 0;
+padding: 3px;
+width: 20px;
+height: 20px;
+display: flex;
+align-items: center;
+justify-content: center;
+background: none;
+border: none;
+color: inherit;
+cursor: pointer;
+z-index: 5;
+opacity: 0.75;
+transition: all 0.2s;
+border-radius: 3px;
+}
+.filter-btn:hover { opacity: 1; background-color: rgba(255,255,255,0.15); }
+.filter-btn svg { width: 12px; height: 12px; fill: currentColor; transition: fill 0.2s; }
+.filter-btn.has-filter { color: var(--filter-active); opacity: 1; }
+.filter-btn.has-filter::after {
+content: '';
+position: absolute;
+top: 1px;
+right: 1px;
+width: 6px;
+height: 6px;
+background-color: var(--filter-active);
+border-radius: 50%;
+box-shadow: 0 0 4px var(--filter-active-glow);
+animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+0%, 100% { opacity: 1; transform: scale(1); }
+50% { opacity: 0.7; transform: scale(1.2); }
+}
+.stamp-cell { background-color: var(--stamp-bg); font-weight: bold; color: var(--stamp-text); }
+.stamp-light-cell { background-color: var(--stamp-light-bg); font-weight: bold; color: var(--stamp-light-text); }
+.warehouse-cell { background-color: var(--warehouse-bg); font-weight: bold; color: var(--warehouse-text); }
+.warehouse-light-cell { background-color: var(--warehouse-light-bg); font-weight: bold; color: var(--warehouse-light-text); }
+.sheets-cell { background-color: var(--sheets-bg); position: relative; }
+.spoiler-btn {
+background-color: var(--sheets-btn-bg);
+color: white;
+border: none;
+padding: 3px 8px;
+border-radius: 3px;
+cursor: pointer;
+font-size: 11px;
+margin-left: 8px;
+transition: background-color 0.3s;
+white-space: nowrap;
+}
+.spoiler-btn:hover { background-color: var(--sheets-btn-hover); }
+.cell-action-btn {
+max-width: 90px;
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
+font-size: 10px;
+padding: 2px 6px;
+flex-shrink: 0;
+margin-left: 5px;
+}
+.cell-with-btn {
+display: flex;
+justify-content: space-between;
+align-items: center;
+gap: 5px;
+width: 100%;
+}
+.sheets-list {
+display: none;
+position: fixed;
+background-color: var(--container-bg);
+border: 1px solid var(--border-color);
+border-radius: 4px;
+padding: 8px;
+box-shadow: 0 4px 8px var(--dropdown-shadow);
+z-index: 3000;
+max-height: 250px;
+overflow-y: auto;
+font-size: 12px;
+white-space: nowrap;
+}
+.sheets-list.show { display: block; }
+.sheet-item {
+padding: 4px 0;
+border-bottom: 1px solid var(--border-color);
+font-size: 12px;
+color: var(--text-color);
+line-height: 1.2;
+}
+.sheet-item:last-child { border-bottom: none; }
+.sheet-total {
+font-weight: bold;
+margin-top: 5px;
+padding-top: 5px;
+border-top: 1px solid var(--border-color);
+}
+.expand-sheets-btn {
+background-color: #2196F3;
+color: white;
+border: none;
+padding: 4px 8px;
+border-radius: 3px;
+cursor: pointer;
+font-size: 11px;
+margin-top: 8px;
+transition: background-color 0.3s;
+display: block;
+width: 100%;
+text-align: center;
+}
+.expand-sheets-btn:hover { background-color: #1976D2; }
+.full-sheets-modal {
+display: none;
+position: fixed;
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+background-color: var(--container-bg);
+border: 2px solid var(--border-color);
+border-radius: 8px;
+padding: 20px;
+box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+z-index: 2000;
+width: 90%;
+max-width: 400px;
+max-height: 80vh;
+overflow-y: auto;
+font-size: 13px;
+}
+.full-sheets-modal.show { display: block; }
+.full-sheets-modal .close-full-modal {
+background-color: var(--close-btn-bg);
+color: white;
+border: none;
+padding: 8px 16px;
+border-radius: 4px;
+cursor: pointer;
+font-size: 13px;
+margin-top: 15px;
+transition: background-color 0.3s;
+display: block;
+width: 100%;
+}
+.full-sheets-modal .close-full-modal:hover { background-color: var(--close-btn-hover); }
+.sheets-overlay {
+display: none;
+position: fixed;
+top: 0; left: 0; right: 0; bottom: 0;
+background-color: rgba(0,0,0,0.5);
+z-index: 1500;
+}
+.sheets-overlay.show { display: block; }
+.filter-dropdown {
+position: fixed;
+background: var(--dropdown-bg);
+border: 1px solid var(--border-color);
+box-shadow: 0 2px 10px var(--dropdown-shadow);
+padding: 8px;
+z-index: 3000;
+width: 230px;
+max-height: 300px;
+overflow-y: auto;
+display: none;
+color: var(--filter-text);
+font-size: 12px;
+border-radius: 4px;
+}
+.filter-dropdown.show { display: block; }
+.filter-item { margin: 3px 0; display: flex; align-items: center; }
+.filter-item input { margin-right: 6px; cursor: pointer; }
+.filter-item label { color: var(--filter-text); cursor: pointer; font-size: 12px; user-select: none; }
+.select-all-btn {
+display: block;
+width: 100%;
+padding: 5px;
+background-color: var(--select-all-bg);
+color: white;
+border: none;
+cursor: pointer;
+border-radius: 3px;
+font-size: 12px;
+text-align: center;
+margin-bottom: 6px;
+transition: background-color 0.2s;
+}
+.select-all-btn:hover { background-color: var(--select-all-hover); }
+.select-all-btn.deselect { background-color: var(--deselect-bg); }
+.select-all-btn.deselect:hover { background-color: var(--deselect-hover); }
+.split-toggle-btn {
+display: block;
+width: 100%;
+padding: 5px;
+background-color: var(--split-btn-bg);
+color: white;
+border: none;
+cursor: pointer;
+border-radius: 3px;
+font-size: 12px;
+font-weight: bold;
+text-align: center;
+margin-bottom: 6px;
+transition: background-color 0.3s;
+}
+.split-toggle-btn:hover { background-color: var(--split-btn-hover); }
+.split-toggle-btn.merge-mode { background-color: var(--merge-btn-bg); }
+.split-toggle-btn.merge-mode:hover { background-color: var(--merge-btn-hover); }
+#totalRow { font-weight: bold; }
+.dark-theme #totalRow td { border-color: #555; }
+.filter-search-container { margin-bottom: 8px; }
+.filter-search-input {
+width: 100%;
+padding: 5px 8px;
+border: 1px solid var(--input-border);
+border-radius: 4px;
+background-color: var(--input-bg);
+color: var(--text-color);
+box-sizing: border-box;
+font-size: 12px;
+}
+.filter-search-input:focus { outline: none; border-color: var(--header-bg); }
+.table-container {
+max-height: 550px;
+overflow-y: auto;
+border: 1px solid var(--border-color);
+border-radius: 5px;
+margin-top: 0;
+position: relative;
+}
+.table-container thead th {
+position: sticky;
+top: 0;
+z-index: 20;
+background-color: var(--table-header-bg) !important;
+}
+.results-table tbody tr { height: 32px; }
+.results-table td { padding: 5px 8px; }
+@media (max-width: 768px) {
+.header-controls { flex-direction: column; gap: 10px; }
+.header-left { width: 100%; flex-direction: column; }
+.upload-container { width: 100%; }
+.main-title { font-size: 18px; padding: 8px 12px; }
+.summary { flex-wrap: wrap; }
+.summary-item { min-width: 150px; }
+.table-container { max-height: 400px; }
+.full-sheets-modal { width: 95%; max-width: 95%; padding: 15px; }
+}
+@media (max-width: 480px) {
+.summary { flex-wrap: wrap; }
+body { padding: 10px; }
+.container { padding: 15px; }
+.full-sheets-modal { width: 98%; max-width: 98%; padding: 10px; }
+}
+.sheets-cell-content {
+display: flex;
+justify-content: space-between;
+align-items: center;
+width: 100%;
+height: 100%;
+position: relative;
+}
+.sheets-count-container { display: flex; align-items: center; }
+.sheets-count { min-width: 30px; text-align: center; display: inline-block; }
+.sheets-btn-container { display: flex; justify-content: flex-end; flex: 1; }
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header-controls">
+<div class="header-left">
+<button id="exportHeaderBtn" class="export-header-btn">Экспорт в Excel</button>
+<div class="upload-container">
+<button id="uploadHeaderBtn" class="upload-header-btn">Перетащите Excel файл или нажмите, чтобы выбрать</button>
+<div id="fileName" class="file-info"></div>
+</div>
+</div>
+<button class="theme-toggle-header" id="themeToggleHeader">🌙</button>
+</div>
+<h1 class="main-title">Анализ отштампованных деталей</h1>
+<div class="summary" id="summary">
+<div class="summary-item">
+<h4>Всего номенклатур</h4>
+<div class="summary-value" id="totalItems">0</div>
+</div>
+<div class="summary-item">
+<h4>Отштамповано всего</h4>
+<div class="summary-value" id="totalQuantity">0</div>
+</div>
+<div class="summary-item">
+<h4>Тоннаж (Штамповка)</h4>
+<div class="summary-value" id="totalTonnageP">0</div>
+</div>
+<div class="summary-item">
+<h4>Деньги (Штамповка)</h4>
+<div class="summary-value" id="totalMoneyQ">0</div>
+</div>
+<div class="summary-item">
+<h4>Склад всего</h4>
+<div class="summary-value" id="totalWarehouse">0</div>
+</div>
+<div class="summary-item">
+<h4>Тоннаж (Склад)</h4>
+<div class="summary-value" id="totalTonnage">0</div>
+</div>
+<div class="summary-item">
+<h4>Деньги (Склад)</h4>
+<div class="summary-value" id="totalMoney">0</div>
+</div>
+<div class="summary-item">
+<h4>Обработано листов</h4>
+<div class="summary-value" id="totalSheets">0</div>
+</div>
+</div>
+<div class="loading" id="loading"><div class="spinner"></div><p>Обработка файла...</p></div>
+<div class="error" id="error"></div>
+<div class="results-section">
+<div class="table-container" id="tableContainer">
+<table class="results-table" id="resultsTable">
+<thead>
+<tr>
+<th class="column-header" data-field="workingCenter" style="min-width:150px;">
+<div class="header-content-wrapper">
+Рабочий центр
+<button class="filter-btn" data-target="filter-dropdown-center" title="Фильтр по РЦ">
+<svg viewBox="0 0 16 16"><path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.152.354L9 9.207V14.5a.5.5 0 0 1-.724.447l-2-1A.5.5 0 0 1 6 13.5V9.207L.652 3.853A.5.5 0 0 1 .5 3.5v-2a.5.5 0 0 1 .5-.5z"/></svg>
+</button>
+</div>
+<div class="filter-dropdown" id="filter-dropdown-center">
+<button class="split-toggle-btn" id="splitCenterBtn">Разбить</button>
+<button class="select-all-btn" id="select-all-center">Выбрать все</button>
+<div id="filter-items-container-center"></div>
+</div>
+</th>
+<th class="column-header" data-field="name" style="min-width:220px;">
+<div class="header-content-wrapper">
+Номенклатура
+<button class="filter-btn" data-target="filter-dropdown-name" title="Фильтр по номенклатуре">
+<svg viewBox="0 0 16 16"><path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.152.354L9 9.207V14.5a.5.5 0 0 1-.724.447l-2-1A.5.5 0 0 1 6 13.5V9.207L.652 3.853A.5.5 0 0 1 .5 3.5v-2a.5.5 0 0 1 .5-.5z"/></svg>
+</button>
+</div>
+<div class="filter-dropdown" id="filter-dropdown-name">
+<button class="select-all-btn" id="select-all-name">Выбрать все</button>
+<div class="filter-search-container">
+<input type="text" id="searchInput" class="filter-search-input" placeholder="Поиск по номенклатуре...">
+</div>
+<div id="filter-items-container-name"></div>
+</div>
+</th>
+<th class="column-header" data-field="total" data-numeric="true"><div class="header-content-wrapper">Отштамповано всего</div></th>
+<th class="column-header" data-field="tonnageP" data-numeric="true"><div class="header-content-wrapper">Тоннаж (Штамповка)</div></th>
+<th class="column-header" data-field="moneyQ" data-numeric="true"><div class="header-content-wrapper">Деньги (Штамповка)</div></th>
+<th class="column-header" data-field="warehouse" data-numeric="true"><div class="header-content-wrapper">Склад всего</div></th>
+<th class="column-header" data-field="tonnage" data-numeric="true"><div class="header-content-wrapper">Тоннаж (Склад)</div></th>
+<th class="column-header" data-field="money" data-numeric="true"><div class="header-content-wrapper">Деньги (Склад)</div></th>
+<th class="column-header" data-field="sheetCount" data-numeric="true"><div class="header-content-wrapper">Листы</div></th>
+</tr>
+</thead>
+<tbody id="resultsBody"></tbody>
+<tfoot>
+<tr id="totalRow" style="display:none;">
+<td style="font-weight:bold;background-color:var(--hover-row-bg);">ИТОГО:</td>
+<td id="grandTotalItems" style="font-weight:bold;background-color:var(--hover-row-bg);">0</td>
+<td class="stamp-cell" id="grandTotalQuantity">0</td>
+<td class="stamp-light-cell" id="grandTotalTonnageP">0</td>
+<td class="stamp-light-cell" id="grandTotalMoneyQ">0</td>
+<td class="warehouse-cell" id="grandTotalWarehouse">0</td>
+<td class="warehouse-light-cell" id="grandTotalTonnage">0</td>
+<td class="warehouse-light-cell" id="grandTotalMoney">0</td>
+<td class="sheets-cell" id="grandTotalSheets"></td>
+</tr>
+</tfoot>
+</table>
+</div>
+</div>
+</div>
+<div class="sheets-overlay" id="sheetsOverlay"></div>
+<script src="xlsx.full.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js" onerror="this.remove()"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+const themeToggleHeader = document.getElementById('themeToggleHeader');
+const uploadHeaderBtn = document.getElementById('uploadHeaderBtn');
+const exportHeaderBtn = document.getElementById('exportHeaderBtn');
+const splitCenterBtn = document.getElementById('splitCenterBtn');
+const fileInput = document.createElement('input');
+fileInput.type = 'file';
+fileInput.accept = '.xlsx,.xls';
+fileInput.style.display = 'none';
+document.body.appendChild(fileInput);
+const fileName = document.getElementById('fileName');
+const loading = document.getElementById('loading');
+const error = document.getElementById('error');
+const resultsTable = document.getElementById('resultsTable');
+const resultsBody = document.getElementById('resultsBody');
+const summary = document.getElementById('summary');
+const totalItems = document.getElementById('totalItems');
+const totalQuantity = document.getElementById('totalQuantity');
+const totalTonnageP = document.getElementById('totalTonnageP');
+const totalMoneyQ = document.getElementById('totalMoneyQ');
+const totalWarehouse = document.getElementById('totalWarehouse');
+const totalTonnage = document.getElementById('totalTonnage');
+const totalMoney = document.getElementById('totalMoney');
+const totalSheets = document.getElementById('totalSheets');
+const totalRow = document.getElementById('totalRow');
+const grandTotalItems = document.getElementById('grandTotalItems');
+const grandTotalQuantity = document.getElementById('grandTotalQuantity');
+const grandTotalTonnageP = document.getElementById('grandTotalTonnageP');
+const grandTotalMoneyQ = document.getElementById('grandTotalMoneyQ');
+const grandTotalWarehouse = document.getElementById('grandTotalWarehouse');
+const grandTotalTonnage = document.getElementById('grandTotalTonnage');
+const grandTotalMoney = document.getElementById('grandTotalMoney');
+const searchInput = document.getElementById('searchInput');
+const filterItemsContainerName = document.getElementById('filter-items-container-name');
+const filterItemsContainerCenter = document.getElementById('filter-items-container-center');
+const selectAllNameBtn = document.getElementById('select-all-name');
+const selectAllCenterBtn = document.getElementById('select-all-center');
+const tableContainer = document.getElementById('tableContainer');
+const sheetsOverlay = document.getElementById('sheetsOverlay');
+
+let currentData = [];
+let sheetNamesList = [];
+let allNameValues = [];
+let allCenterValues = [];
+let activeNameFilters = new Set();
+let activeCenterFilters = new Set();
+let isSplitMode = false;
+let sortField = 'name';
+let sortDir = 'asc';
+let openDropdown = null;
+let openDropdownBtn = null;
+const body = document.body;
+
+function getSystemThemePreference() {
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
+    return 'light';
+}
+function setTheme(theme) {
+    if (theme === 'dark') { body.classList.add('dark-theme'); themeToggleHeader.textContent = '☀️'; localStorage.setItem('theme','dark'); }
+    else { body.classList.remove('dark-theme'); themeToggleHeader.textContent = '🌙'; localStorage.setItem('theme','light'); }
+}
+function initTheme() { setTheme(localStorage.getItem('theme') || getSystemThemePreference()); }
+initTheme();
+themeToggleHeader.addEventListener('click', () => setTheme(body.classList.contains('dark-theme') ? 'light' : 'dark'));
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    if (!localStorage.getItem('theme')) setTheme(e.matches ? 'dark' : 'light');
+});
+
+uploadHeaderBtn.addEventListener('click', () => fileInput.click());
+exportHeaderBtn.addEventListener('click', () => exportToExcel());
+splitCenterBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    isSplitMode = !isSplitMode;
+    this.textContent = isSplitMode ? 'Свести' : 'Разбить';
+    this.classList.toggle('merge-mode', isSplitMode);
+    rebuildTable();
+});
+fileInput.addEventListener('change', function(e) {
+    if (e.target.files.length > 0) {
+        uploadHeaderBtn.textContent = 'Выбрать другой файл';
+        fileName.textContent = `Загружен файл: ${e.target.files[0].name}`;
+        fileName.style.display = 'block';
+        processFile(e.target.files[0]);
+    }
+});
+
+function clearOldSheetsData() {
+    document.querySelectorAll('.sheets-list').forEach(el => el.remove());
+    document.querySelectorAll('.full-sheets-modal').forEach(el => el.remove());
+    sheetsOverlay.classList.remove('show');
+}
+
+function processFile(file) {
+    clearOldSheetsData();
+    resultsTable.style.display = 'none';
+    summary.style.display = 'none';
+    error.style.display = 'none';
+    totalRow.style.display = 'none';
+    if (searchInput) searchInput.value = '';
+    loading.style.display = 'block';
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = e.target.result;
+            const workbook = XLSX.read(data, { type: 'binary' });
+            const summaryData = {};
+            let processedSheets = 0;
+            sheetNamesList = [];
+            workbook.SheetNames.forEach(sheetName => {
+                const worksheet = workbook.Sheets[sheetName];
+                const sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+                let hasData = false;
+                let lastNonEmptyB = null;
+                for (let i = 3; i < sheetData.length; i++) {
+                    const row = sheetData[i];
+                    if (row[1] !== undefined && row[1] !== '') lastNonEmptyB = String(row[1]).trim();
+                    const workingCenter = lastNonEmptyB || '(пусто)';
+                    if (row[8] !== undefined && row[8] !== '') {
+                        const itemName = String(row[8]).trim();
+                        if (itemName === '') continue;
+                        const itemNameLower = itemName.toLowerCase();
+                        let quantity = (row[14] !== undefined && row[14] !== '') ? parseFloat(row[14]) || 0 : 0;
+                        let tonnagePVal = (row[15] !== undefined && row[15] !== '') ? parseFloat(row[15]) || 0 : 0;
+                        let moneyQVal = (row[16] !== undefined && row[16] !== '') ? parseFloat(row[16]) || 0 : 0;
+                        let warehouseValue = (row[18] !== undefined && row[18] !== '') ? parseFloat(row[18]) || 0 : 0;
+                        let tonnageValue = (row[19] !== undefined && row[19] !== '') ? parseFloat(row[19]) || 0 : 0;
+                        let moneyValue = (row[20] !== undefined && row[20] !== '') ? parseFloat(row[20]) || 0 : 0;
+
+                        if (quantity !== 0 || warehouseValue !== 0 || tonnageValue !== 0 || moneyValue !== 0 || tonnagePVal !== 0 || moneyQVal !== 0) {
+                            hasData = true;
+                            let existingKey = null;
+                            for (const key in summaryData) {
+                                if (key.toLowerCase() === itemNameLower) { existingKey = key; break; }
+                            }
+                            if (existingKey !== null) {
+                                const ex = summaryData[existingKey];
+                                ex.total += quantity; ex.tonnageP += tonnagePVal; ex.moneyQ += moneyQVal;
+                                ex.warehouse += warehouseValue; ex.tonnage += tonnageValue; ex.money += moneyValue;
+                                ex.sheets.add(sheetName);
+                                if (!ex.sheetsData[sheetName]) ex.sheetsData[sheetName] = { stamping:0, warehouse:0, tonnage:0, money:0, tonnageP:0, moneyQ:0 };
+                                ex.sheetsData[sheetName].stamping += quantity;
+                                ex.sheetsData[sheetName].tonnageP += tonnagePVal;
+                                ex.sheetsData[sheetName].moneyQ += moneyQVal;
+                                ex.sheetsData[sheetName].warehouse += warehouseValue;
+                                ex.sheetsData[sheetName].tonnage += tonnageValue;
+                                ex.sheetsData[sheetName].money += moneyValue;
+                                ex.workingCenters.add(workingCenter);
+                                if (!ex.workingCentersData[workingCenter]) ex.workingCentersData[workingCenter] = 0;
+                                ex.workingCentersData[workingCenter] += quantity;
+                                if (!ex.centerSheetsData[workingCenter]) {
+                                    ex.centerSheetsData[workingCenter] = { sheetsData:{}, sheets:new Set(), sheetsArray:[], total:0, warehouse:0, tonnage:0, money:0, tonnageP:0, moneyQ:0 };
+                                }
+                                const cd = ex.centerSheetsData[workingCenter];
+                                if (!cd.sheetsData[sheetName]) cd.sheetsData[sheetName] = { stamping:0, warehouse:0, tonnage:0, money:0, tonnageP:0, moneyQ:0 };
+                                cd.sheetsData[sheetName].stamping += quantity;
+                                cd.sheetsData[sheetName].tonnageP += tonnagePVal;
+                                cd.sheetsData[sheetName].moneyQ += moneyQVal;
+                                cd.sheetsData[sheetName].warehouse += warehouseValue;
+                                cd.sheetsData[sheetName].tonnage += tonnageValue;
+                                cd.sheetsData[sheetName].money += moneyValue;
+                                cd.sheets.add(sheetName);
+                                if (!cd.sheetsArray.includes(sheetName)) cd.sheetsArray.push(sheetName);
+                                cd.total += quantity; cd.tonnageP += tonnagePVal; cd.moneyQ += moneyQVal;
+                                cd.warehouse += warehouseValue; cd.tonnage += tonnageValue; cd.money += moneyValue;
+                                if (!ex.sheetsArray.includes(sheetName)) ex.sheetsArray.push(sheetName);
+                            } else {
+                                summaryData[itemName] = {
+                                    total: quantity, tonnageP: tonnagePVal, moneyQ: moneyQVal,
+                                    warehouse: warehouseValue, tonnage: tonnageValue, money: moneyValue,
+                                    sheets: new Set([sheetName]), sheetsArray: [sheetName],
+                                    sheetsData: { [sheetName]: { stamping:quantity, tonnageP:tonnagePVal, moneyQ:moneyQVal, warehouse:warehouseValue, tonnage:tonnageValue, money:moneyValue } },
+                                    workingCenters: new Set([workingCenter]),
+                                    workingCentersData: { [workingCenter]: quantity },
+                                    centerSheetsData: {
+                                        [workingCenter]: {
+                                            sheetsData: { [sheetName]: { stamping:quantity, tonnageP:tonnagePVal, moneyQ:moneyQVal, warehouse:warehouseValue, tonnage:tonnageValue, money:moneyValue } },
+                                            sheets: new Set([sheetName]), sheetsArray: [sheetName],
+                                            total: quantity, tonnageP: tonnagePVal, moneyQ: moneyQVal,
+                                            warehouse: warehouseValue, tonnage: tonnageValue, money: moneyValue
+                                        }
+                                    }
+                                };
+                            }
+                        }
+                    }
+                }
+                if (hasData) { processedSheets++; sheetNamesList.push(sheetName); }
+            });
+            currentData = Object.entries(summaryData)
+                .map(([name, info]) => ({
+                    name, total: info.total, tonnageP: info.tonnageP, moneyQ: info.moneyQ,
+                    warehouse: info.warehouse, tonnage: info.tonnage, money: info.money,
+                    sheetCount: info.sheets.size, sheetsArray: info.sheetsArray, sheetsData: info.sheetsData,
+                    workingCenter: Array.from(info.workingCenters).filter(Boolean).join('; '),
+                    workingCentersArray: Array.from(info.workingCenters),
+                    workingCentersData: info.workingCentersData,
+                    centerSheetsData: info.centerSheetsData
+                }))
+                .sort((a, b) => a.name.localeCompare(b.name));
+            updateResults(currentData, processedSheets);
+            initFilters(currentData);
+        } catch (err) {
+            showError('Ошибка при обработке файла: ' + err.message);
+            console.error(err);
+        } finally { loading.style.display = 'none'; }
+    };
+    reader.onerror = function() { showError('Ошибка при чтении файла'); loading.style.display = 'none'; };
+    reader.readAsBinaryString(file);
+}
+
+function getSplitData(data) {
+    const splitRows = [];
+    data.forEach(item => {
+        if (item.workingCentersArray && item.workingCentersArray.length > 1) {
+            item.workingCentersArray.forEach(center => {
+                const cd = item.centerSheetsData[center];
+                if (cd) {
+                    splitRows.push({
+                        name: item.name, total: cd.total, tonnageP: cd.tonnageP, moneyQ: cd.moneyQ,
+                        warehouse: cd.warehouse, tonnage: cd.tonnage, money: cd.money,
+                        sheetCount: cd.sheets.size, sheetsArray: cd.sheetsArray, sheetsData: cd.sheetsData,
+                        workingCenter: center, workingCentersArray: [center], isSplitRow: true
+                    });
+                }
+            });
+        } else {
+            splitRows.push({ ...item, isSplitRow: false });
+        }
+    });
+    return splitRows;
+}
+
+function rebuildTable() {
+    clearOldSheetsData();
+    const displayData = isSplitMode ? getSplitData(currentData) : currentData;
+    renderTable(displayData);
+    applyFilters();
+    updateFilterIcons();
+}
+
+function updateFilterIcons() {
+    const nameBtn = document.querySelector('[data-target="filter-dropdown-name"]');
+    const centerBtn = document.querySelector('[data-target="filter-dropdown-center"]');
+    if (nameBtn) nameBtn.classList.toggle('has-filter', activeNameFilters.size > 0);
+    if (centerBtn) centerBtn.classList.toggle('has-filter', activeCenterFilters.size > 0);
+}
+
+function initFilters(data) {
+    allNameValues = [...new Set(data.map(item => item.name))].sort();
+    const allCentersSet = new Set();
+    data.forEach(item => {
+        if (item.workingCentersArray) item.workingCentersArray.forEach(c => { if (c && c.trim()) allCentersSet.add(c); });
+    });
+    allCenterValues = Array.from(allCentersSet).sort();
+    activeNameFilters = new Set();
+    activeCenterFilters = new Set();
+    updateNameFilterItems();
+    updateCenterFilterItems();
+    updateFilterIcons();
+    searchInput.addEventListener('input', () => applyFilters());
+    selectAllNameBtn.addEventListener('click', function() {
+        const cbs = filterItemsContainerName.querySelectorAll('input[type="checkbox"]');
+        const allChecked = Array.from(cbs).every(cb => cb.checked);
+        const st = searchInput.value.toLowerCase().trim();
+        let items = st ? Array.from(cbs).filter(cb => cb.value.toLowerCase().includes(st)).map(cb => cb.value) : allNameValues;
+        items.forEach(n => { allChecked ? activeNameFilters.delete(n) : activeNameFilters.add(n); });
+        updateNameFilterItems();
+        applyFilters();
+        updateFilterIcons();
+    });
+    selectAllCenterBtn.addEventListener('click', function() {
+        const cbs = filterItemsContainerCenter.querySelectorAll('input[type="checkbox"]');
+        const allChecked = Array.from(cbs).every(cb => cb.checked);
+        cbs.forEach(cb => {
+            cb.checked = !allChecked;
+            allChecked ? activeCenterFilters.delete(cb.value) : activeCenterFilters.add(cb.value);
+        });
+        updateCenterFilterItems();
+        applyFilters();
+        updateFilterIcons();
+    });
+}
+
+function updateNameFilterItems() {
+    filterItemsContainerName.innerHTML = '';
+    const st = searchInput.value.toLowerCase().trim();
+    const filtered = st ? allNameValues.filter(n => n.toLowerCase().includes(st)) : allNameValues;
+    filtered.forEach(name => {
+        const div = document.createElement('div'); div.className = 'filter-item';
+        const cb = document.createElement('input'); cb.type = 'checkbox';
+        cb.id = `name-${name.replace(/\s+/g,'-')}`; cb.value = name; cb.checked = activeNameFilters.has(name);
+        cb.addEventListener('change', function() { this.checked ? activeNameFilters.add(name) : activeNameFilters.delete(name); applyFilters(); updateFilterIcons(); });
+        const label = document.createElement('label'); label.htmlFor = cb.id; label.textContent = name;
+        div.appendChild(cb); div.appendChild(label); filterItemsContainerName.appendChild(div);
+    });
+    const allF = filtered.length > 0 && filtered.every(n => activeNameFilters.has(n));
+    selectAllNameBtn.textContent = allF ? 'Отменить выбор' : 'Выбрать все';
+    selectAllNameBtn.classList.toggle('deselect', allF);
+}
+
+function updateCenterFilterItems() {
+    filterItemsContainerCenter.innerHTML = '';
+    allCenterValues.forEach(center => {
+        const div = document.createElement('div'); div.className = 'filter-item';
+        const cb = document.createElement('input'); cb.type = 'checkbox';
+        cb.id = `center-${center.replace(/\s+/g,'-')}`; cb.value = center; cb.checked = activeCenterFilters.has(center);
+        cb.addEventListener('change', function() { this.checked ? activeCenterFilters.add(center) : activeCenterFilters.delete(center); applyFilters(); updateFilterIcons(); });
+        const label = document.createElement('label'); label.htmlFor = cb.id; label.textContent = center;
+        div.appendChild(cb); div.appendChild(label); filterItemsContainerCenter.appendChild(div);
+    });
+    const allC = allCenterValues.length > 0 && allCenterValues.every(c => activeCenterFilters.has(c));
+    selectAllCenterBtn.textContent = allC ? 'Отменить выбор' : 'Выбрать все';
+    selectAllCenterBtn.classList.toggle('deselect', allC);
+}
+
+function getComparator() {
+    const dir = sortDir === 'asc' ? 1 : -1;
+    const field = sortField;
+    return (a, b) => {
+        let va = a[field], vb = b[field];
+        if (typeof va === 'number' && typeof vb === 'number') return dir * (va - vb);
+        return dir * String(va ?? '').localeCompare(String(vb ?? ''), 'ru', { numeric: true });
+    };
+}
+
+function updateSortIndicators() {
+    document.querySelectorAll('.results-table thead th[data-field]').forEach(th => {
+        if (th.dataset.field === sortField) th.dataset.sort = sortDir;
+        else delete th.dataset.sort;
+    });
+}
+
+function applyFilters() {
+    const rows = resultsBody.querySelectorAll('tr');
+    const st = searchInput.value.toLowerCase().trim();
+    rows.forEach(row => {
+        const centerValue = row.cells[0].textContent;
+        const name = row.cells[1].textContent;
+        let nameMatch = activeNameFilters.size === 0 || activeNameFilters.has(name);
+        if (st && !name.toLowerCase().includes(st)) nameMatch = false;
+        let centerMatch = true;
+        if (activeCenterFilters.size > 0) {
+            const centers = centerValue.split('; ').filter(c => c.trim());
+            centerMatch = centers.length === 0 ? activeCenterFilters.has('(пусто)') : centers.some(c => activeCenterFilters.has(c));
+        }
+        row.style.display = (nameMatch && centerMatch) ? '' : 'none';
+    });
+    updateTotalsForVisibleRows();
+}
+
+function updateTotalsForVisibleRows() {
+    const rows = resultsBody.querySelectorAll('tr');
+    let vQ=0,vTP=0,vMQ=0,vW=0,vT=0,vM=0;
+    rows.forEach(row => {
+        if (row.style.display !== 'none') {
+            const gv = (cell) => { const el = cell.querySelector('.cell-value'); return parseFloat((el?el.textContent:cell.textContent).replace(/\s/g,''))||0; };
+            vQ += gv(row.cells[2]); vTP += gv(row.cells[3]); vMQ += gv(row.cells[4]);
+            vW += gv(row.cells[5]); vT += gv(row.cells[6]); vM += gv(row.cells[7]);
+        }
+    });
+    grandTotalQuantity.textContent = formatNumber(vQ);
+    grandTotalTonnageP.textContent = formatNumber(vTP);
+    grandTotalMoneyQ.textContent = formatMoney(vMQ);
+    grandTotalWarehouse.textContent = formatNumber(vW);
+    grandTotalTonnage.textContent = formatNumber(vT);
+    grandTotalMoney.textContent = formatMoney(vM);
+}
+
+document.querySelectorAll('.filter-dropdown').forEach(d => {
+    document.body.appendChild(d);
+    d.addEventListener('click', e => e.stopPropagation());
+    d.addEventListener('mousedown', e => e.stopPropagation());
+});
+
+function positionSheetsList(list, button) {
+    const rect = button.getBoundingClientRect();
+    const listWidth = list.offsetWidth || 200;
+    const listHeight = list.offsetHeight || 100;
+    
+    let left = rect.left;
+    if (left + listWidth > window.innerWidth - 8) left = window.innerWidth - listWidth - 8;
+    if (left < 8) left = 8;
+    
+    let top;
+    const spaceBelow = window.innerHeight - rect.bottom - 8;
+    const spaceAbove = rect.top - 8;
+    
+    if (listHeight <= spaceBelow) {
+        top = rect.bottom + 4;
+    } else if (listHeight <= spaceAbove) {
+        top = rect.top - listHeight - 4;
+    } else {
+        top = 8;
+        list.style.maxHeight = (window.innerHeight - 16) + 'px';
+    }
+    
+    list.style.top = top + 'px';
+    list.style.left = left + 'px';
+}
+
+function closeAllSheetsLists() {
+    document.querySelectorAll('.sheets-list.show').forEach(el => el.classList.remove('show'));
+    document.querySelectorAll('[data-original-text]').forEach(btn => { btn.textContent = btn.dataset.originalText; delete btn.dataset.originalText; });
+}
+
+function positionFilterDropdown(dropdown, button) {
+    const rect = button.getBoundingClientRect();
+    const ddWidth = dropdown.offsetWidth || 230;
+    let left = rect.right - ddWidth;
+    if (left + ddWidth > window.innerWidth - 8) left = window.innerWidth - ddWidth - 8;
+    if (left < 8) left = 8;
+    let top = rect.bottom + 4;
+    const ddHeight = dropdown.offsetHeight || 300;
+    if (top + ddHeight > window.innerHeight - 8) {
+        top = rect.top - ddHeight - 4;
+        if (top < 8) top = 8;
+    }
+    dropdown.style.top = top + 'px';
+    dropdown.style.left = left + 'px';
+}
+
+function closeAllFilterDropdowns() {
+    document.querySelectorAll('.filter-dropdown.show').forEach(d => d.classList.remove('show'));
+    openDropdown = null;
+    openDropdownBtn = null;
+}
+
+document.querySelectorAll('.filter-btn').forEach(button => {
+    button.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const targetId = this.dataset.target;
+        const dropdown = document.getElementById(targetId);
+        const willOpen = !dropdown.classList.contains('show');
+        closeAllFilterDropdowns();
+        if (willOpen) {
+            dropdown.classList.add('show');
+            openDropdown = dropdown;
+            openDropdownBtn = this;
+            requestAnimationFrame(() => positionFilterDropdown(dropdown, this));
+            if (targetId === 'filter-dropdown-name') setTimeout(() => searchInput.focus(), 0);
+        }
+    });
+});
+
+document.addEventListener('click', e => {
+    if (!e.target.closest('.filter-dropdown') && !e.target.closest('.filter-btn')) {
+        closeAllFilterDropdowns();
+    }
+});
+
+tableContainer.addEventListener('scroll', () => { closeAllSheetsLists(); });
+
+window.addEventListener('scroll', function(e) {
+    if (e.target && typeof e.target.closest === 'function' &&
+        (e.target.closest('.filter-dropdown') || e.target.closest('.sheets-list'))) {
+        return;
+    }
+    closeAllSheetsLists();
+    if (openDropdown && openDropdownBtn) {
+        const rect = openDropdownBtn.getBoundingClientRect();
+        if (rect.bottom < 0 || rect.top > window.innerHeight) {
+            closeAllFilterDropdowns();
+        } else {
+            positionFilterDropdown(openDropdown, openDropdownBtn);
+        }
+    }
+}, true);
+
+window.addEventListener('resize', () => {
+    closeAllSheetsLists();
+    if (openDropdown && openDropdownBtn) positionFilterDropdown(openDropdown, openDropdownBtn);
+});
+
+function toggleCellSheetList(listId, anchorBtn) {
+    const sl = document.getElementById(listId);
+    if (!sl) return;
+    const isOpening = !sl.classList.contains('show');
+    closeAllSheetsLists();
+    if (isOpening) {
+        sl.classList.add('show');
+        anchorBtn.dataset.originalText = anchorBtn.textContent;
+        anchorBtn.textContent = 'Скрыть';
+        requestAnimationFrame(() => positionSheetsList(sl, anchorBtn));
+    }
+}
+
+document.querySelectorAll('.results-table thead th[data-field]').forEach(th => {
+    th.addEventListener('click', function(e) {
+        if (e.target.closest('.filter-btn')) return;
+        const field = this.dataset.field;
+        if (sortField === field) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+        else { sortField = field; sortDir = 'asc'; }
+        rebuildTable();
+    });
+});
+
+function renderTable(displayData) {
+    resultsBody.innerHTML = '';
+    if (displayData.length === 0) { showError('В файле не найдено данных'); return; }
+    
+    const sortedData = [...displayData].sort(getComparator());
+    updateSortIndicators();
+    
+    let gQ=0,gTP=0,gMQ=0,gW=0,gT=0,gM=0;
+
+    sortedData.forEach((item, index) => {
+        const row = document.createElement('tr');
+        const centerCell = document.createElement('td');
+        centerCell.textContent = item.workingCenter;
+        const nameCell = document.createElement('td');
+        nameCell.textContent = item.name;
+        const totalCell = document.createElement('td');
+        totalCell.className = 'stamp-cell';
+        const totalCellContent = document.createElement('div');
+        totalCellContent.className = 'cell-with-btn';
+        const totalValue = document.createElement('span');
+        totalValue.className = 'cell-value';
+        totalValue.textContent = formatNumber(item.total);
+        totalCellContent.appendChild(totalValue);
+        if (item.total > 0 && item.sheetCount > 0) {
+            const sorted = [...item.sheetsArray].sort();
+            let lastS = null;
+            for (let i = sorted.length-1; i >= 0; i--) { if (item.sheetsData[sorted[i]]?.stamping !== 0) { lastS = sorted[i]; break; } }
+            if (lastS) {
+                const btn = document.createElement('button');
+                btn.className = 'spoiler-btn cell-action-btn';
+                btn.textContent = lastS;
+                btn.addEventListener('click', function(e) { e.stopPropagation(); toggleCellSheetList(`sl-stamp-${item.name}`, this); });
+                totalCellContent.appendChild(btn);
+            }
+        }
+        totalCell.appendChild(totalCellContent);
+        const tonnagePCell = document.createElement('td');
+        tonnagePCell.className = 'stamp-light-cell';
+        const tpVal = document.createElement('span');
+        tpVal.className = 'cell-value';
+        tpVal.textContent = formatNumber(item.tonnageP);
+        tonnagePCell.appendChild(tpVal);
+        const moneyQCell = document.createElement('td');
+        moneyQCell.className = 'stamp-light-cell';
+        const mqVal = document.createElement('span');
+        mqVal.className = 'cell-value';
+        mqVal.textContent = formatMoney(item.moneyQ);
+        moneyQCell.appendChild(mqVal);
+        const warehouseCell = document.createElement('td');
+        warehouseCell.className = 'warehouse-cell';
+        const whContent = document.createElement('div');
+        whContent.className = 'cell-with-btn';
+        const whVal = document.createElement('span');
+        whVal.className = 'cell-value';
+        whVal.textContent = formatNumber(item.warehouse);
+        whContent.appendChild(whVal);
+        if (item.warehouse > 0 && item.sheetCount > 0) {
+            const sorted = [...item.sheetsArray].sort();
+            let lastW = null;
+            for (let i = sorted.length-1; i >= 0; i--) { if (item.sheetsData[sorted[i]]?.warehouse !== 0) { lastW = sorted[i]; break; } }
+            if (lastW) {
+                const btn = document.createElement('button');
+                btn.className = 'spoiler-btn cell-action-btn';
+                btn.textContent = lastW;
+                btn.addEventListener('click', function(e) { e.stopPropagation(); toggleCellSheetList(`sl-wh-${item.name}`, this); });
+                whContent.appendChild(btn);
+            }
+        }
+        warehouseCell.appendChild(whContent);
+        const tonnageCell = document.createElement('td');
+        tonnageCell.className = 'warehouse-light-cell';
+        const tVal = document.createElement('span');
+        tVal.className = 'cell-value';
+        tVal.textContent = formatNumber(item.tonnage);
+        tonnageCell.appendChild(tVal);
+        const moneyCell = document.createElement('td');
+        moneyCell.className = 'warehouse-light-cell';
+        const mVal = document.createElement('span');
+        mVal.className = 'cell-value';
+        mVal.textContent = formatMoney(item.money);
+        moneyCell.appendChild(mVal);
+        const sheetsCell = document.createElement('td');
+        sheetsCell.className = 'sheets-cell';
+        const scContent = document.createElement('div');
+        scContent.className = 'sheets-cell-content';
+        const cntCont = document.createElement('div');
+        cntCont.className = 'sheets-count-container';
+        const cntSpan = document.createElement('span');
+        cntSpan.className = 'sheets-count';
+        cntSpan.textContent = item.sheetCount;
+        cntCont.appendChild(cntSpan);
+        scContent.appendChild(cntCont);
+        const btnCont = document.createElement('div');
+        btnCont.className = 'sheets-btn-container';
+        if (item.sheetCount > 0) {
+            const spoilerBtn = document.createElement('button');
+            spoilerBtn.className = 'spoiler-btn';
+            spoilerBtn.textContent = 'Показать';
+            spoilerBtn.addEventListener('click', function(e) { e.stopPropagation(); toggleCellSheetList(`sl-full-${item.name}`, this); });
+            btnCont.appendChild(spoilerBtn);
+            const fullList = document.createElement('div');
+            fullList.className = 'sheets-list';
+            fullList.id = `sl-full-${item.name}`;
+            fullList.addEventListener('click', e => e.stopPropagation());
+            const cols = document.createElement('div');
+            cols.style.cssText = 'display:flex;gap:15px;';
+            const sCol = document.createElement('div'); sCol.style.flex = '1';
+            const sH = document.createElement('div'); sH.textContent = 'Штамповка'; sH.style.cssText = 'font-weight:bold;margin-bottom:5px;color:var(--text-color)';
+            sCol.appendChild(sH);
+            const wCol = document.createElement('div'); wCol.style.flex = '1';
+            const wH = document.createElement('div'); wH.textContent = 'Склад'; wH.style.cssText = 'font-weight:bold;margin-bottom:5px;color:var(--text-color)';
+            wCol.appendChild(wH);
+            [...item.sheetsArray].sort().forEach(sn => {
+                const si = item.sheetsData[sn];
+                if (!si) return;
+                if (si.stamping !== 0) { const d = document.createElement('div'); d.className='sheet-item'; d.textContent=`${sn} (${si.stamping}шт)`; sCol.appendChild(d); }
+                if (si.warehouse !== 0) { const d = document.createElement('div'); d.className='sheet-item'; d.textContent=`${sn} (${si.warehouse}шт)`; wCol.appendChild(d); }
+            });
+            cols.appendChild(sCol); cols.appendChild(wCol);
+            fullList.appendChild(cols);
+            const expBtn = document.createElement('button');
+            expBtn.className = 'expand-sheets-btn';
+            expBtn.textContent = 'Развернуть';
+            expBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                fullList.classList.remove('show');
+                spoilerBtn.textContent = 'Показать';
+                openDetailModal(item, 'full');
+            });
+            fullList.appendChild(expBtn);
+            scContent.appendChild(fullList);
+            document.body.appendChild(fullList);
+        }
+        scContent.appendChild(btnCont);
+        sheetsCell.appendChild(scContent);
+
+        row.appendChild(centerCell);
+        row.appendChild(nameCell);
+        row.appendChild(totalCell);
+        row.appendChild(tonnagePCell);
+        row.appendChild(moneyQCell);
+        row.appendChild(warehouseCell);
+        row.appendChild(tonnageCell);
+        row.appendChild(moneyCell);
+        row.appendChild(sheetsCell);
+        resultsBody.appendChild(row);
+
+        gQ += item.total; gTP += item.tonnageP; gMQ += item.moneyQ;
+        gW += item.warehouse; gT += item.tonnage; gM += item.money;
+
+        if (item.sheetCount > 0) {
+            const sList = document.createElement('div');
+            sList.className = 'sheets-list';
+            sList.id = `sl-stamp-${item.name}`;
+            sList.addEventListener('click', e => e.stopPropagation());
+            let ts=0, sc=0;
+            [...item.sheetsArray].sort().forEach(sn => {
+                const si = item.sheetsData[sn];
+                if (si && si.stamping !== 0) {
+                    const d = document.createElement('div'); d.className='sheet-item'; d.textContent=`${sn} (${si.stamping}шт)`;
+                    sList.appendChild(d); ts += si.stamping; sc++;
+                }
+            });
+            if (sc > 1 && ts !== 0) { const d = document.createElement('div'); d.className='sheet-total'; d.textContent=`Итого: ${formatNumber(ts)}шт`; sList.appendChild(d); }
+            const expBtn = document.createElement('button');
+            expBtn.className = 'expand-sheets-btn';
+            expBtn.textContent = 'Развернуть';
+            expBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                sList.classList.remove('show');
+                document.querySelectorAll('[data-original-text]').forEach(b => { b.textContent = b.dataset.originalText; delete b.dataset.originalText; });
+                openDetailModal(item, 'stamping');
+            });
+            sList.appendChild(expBtn);
+            document.body.appendChild(sList);
+
+            const wList = document.createElement('div');
+            wList.className = 'sheets-list';
+            wList.id = `sl-wh-${item.name}`;
+            wList.addEventListener('click', e => e.stopPropagation());
+            let tw=0, wc=0;
+            [...item.sheetsArray].sort().forEach(sn => {
+                const si = item.sheetsData[sn];
+                if (si && si.warehouse !== 0) {
+                    const d = document.createElement('div'); d.className='sheet-item'; d.textContent=`${sn} (${si.warehouse}шт)`;
+                    wList.appendChild(d); tw += si.warehouse; wc++;
+                }
+            });
+            if (wc > 1 && tw !== 0) { const d = document.createElement('div'); d.className='sheet-total'; d.textContent=`Итого: ${formatNumber(tw)}шт`; wList.appendChild(d); }
+            const expBtn2 = document.createElement('button');
+            expBtn2.className = 'expand-sheets-btn';
+            expBtn2.textContent = 'Развернуть';
+            expBtn2.addEventListener('click', function(e) {
+                e.stopPropagation();
+                wList.classList.remove('show');
+                document.querySelectorAll('[data-original-text]').forEach(b => { b.textContent = b.dataset.originalText; delete b.dataset.originalText; });
+                openDetailModal(item, 'warehouse');
+            });
+            wList.appendChild(expBtn2);
+            document.body.appendChild(wList);
+        }
+    });
+
+    grandTotalItems.textContent = currentData.length;
+    grandTotalQuantity.textContent = formatNumber(gQ);
+    grandTotalTonnageP.textContent = formatNumber(gTP);
+    grandTotalMoneyQ.textContent = formatMoney(gMQ);
+    grandTotalWarehouse.textContent = formatNumber(gW);
+    grandTotalTonnage.textContent = formatNumber(gT);
+    grandTotalMoney.textContent = formatMoney(gM);
+
+    resultsTable.style.display = 'table';
+    summary.style.display = 'flex';
+    totalRow.style.display = 'table-row';
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.spoiler-btn') && !e.target.closest('.cell-action-btn') && !e.target.closest('.sheets-list') && !e.target.closest('.expand-sheets-btn')) {
+            closeAllSheetsLists();
+        }
+    });
+}
+
+function updateResults(data, processedSheetsCount) {
+    totalItems.textContent = data.length;
+    let gQ=0,gTP=0,gMQ=0,gW=0,gT=0,gM=0;
+    data.forEach(item => { gQ += item.total; gTP += item.tonnageP; gMQ += item.moneyQ; gW += item.warehouse; gT += item.tonnage; gM += item.money; });
+    totalQuantity.textContent = formatNumber(gQ);
+    totalTonnageP.textContent = formatNumber(gTP);
+    totalMoneyQ.textContent = formatMoney(gMQ);
+    totalWarehouse.textContent = formatNumber(gW);
+    totalTonnage.textContent = formatNumber(gT);
+    totalMoney.textContent = formatMoney(gM);
+    totalSheets.textContent = processedSheetsCount;
+    const displayData = isSplitMode ? getSplitData(data) : data;
+    renderTable(displayData);
+}
+
+function openDetailModal(item, type) {
+    const modalId = `modal-${type}-${item.name}`;
+    let modal = document.getElementById(modalId);
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.className = 'full-sheets-modal';
+        modal.id = modalId;
+        modal.addEventListener('click', e => e.stopPropagation());
+
+        const title = document.createElement('h3');
+        title.textContent = item.name;
+        title.style.cssText = 'margin:0 0 20px 0;color:var(--text-color);text-align:center;font-size:16px;';
+        modal.appendChild(title);
+
+        const sorted = [...item.sheetsArray].sort();
+
+        if (type === 'full') {
+            const cols = document.createElement('div');
+            cols.style.cssText = 'display:flex;gap:20px;margin-bottom:15px;';
+            const sCol = document.createElement('div'); sCol.style.flex = '1';
+            const sH = document.createElement('div'); sH.textContent = 'Штамповка'; sH.style.cssText = 'font-weight:bold;margin-bottom:10px;font-size:14px;color:var(--text-color)';
+            sCol.appendChild(sH);
+            const wCol = document.createElement('div'); wCol.style.flex = '1';
+            const wH = document.createElement('div'); wH.textContent = 'Склад'; wH.style.cssText = 'font-weight:bold;margin-bottom:10px;font-size:14px;color:var(--text-color)';
+            wCol.appendChild(wH);
+            const sItems=[], wItems=[];
+            sorted.forEach(sn => {
+                const si = item.sheetsData[sn];
+                if (!si) return;
+                if (si.stamping !== 0) { const d = document.createElement('div'); d.className='sheet-item'; d.textContent=`${sn} (${si.stamping}шт)`; sCol.appendChild(d); sItems.push(si.stamping); }
+                if (si.warehouse !== 0) { const d = document.createElement('div'); d.className='sheet-item'; d.textContent=`${sn} (${si.warehouse}шт)`; wCol.appendChild(d); wItems.push(si.warehouse); }
+            });
+            if (sItems.length > 1) { const d = document.createElement('div'); d.className='sheet-total'; d.textContent=`Итого: ${formatNumber(sItems.reduce((a,b)=>a+b,0))}шт`; sCol.appendChild(d); }
+            if (wItems.length > 1) { const d = document.createElement('div'); d.className='sheet-total'; d.textContent=`Итого: ${formatNumber(wItems.reduce((a,b)=>a+b,0))}шт`; wCol.appendChild(d); }
+            cols.appendChild(sCol); cols.appendChild(wCol);
+            modal.appendChild(cols);
+        } else if (type === 'stamping') {
+            const items = [];
+            sorted.forEach(sn => {
+                const si = item.sheetsData[sn];
+                if (si && si.stamping !== 0) { const d = document.createElement('div'); d.className='sheet-item'; d.textContent=`${sn} (${si.stamping}шт)`; modal.appendChild(d); items.push(si.stamping); }
+            });
+            if (items.length > 1) { const d = document.createElement('div'); d.className='sheet-total'; d.textContent=`Итого: ${formatNumber(items.reduce((a,b)=>a+b,0))}шт`; modal.appendChild(d); }
+        } else if (type === 'warehouse') {
+            const items = [];
+            sorted.forEach(sn => {
+                const si = item.sheetsData[sn];
+                if (si && si.warehouse !== 0) { const d = document.createElement('div'); d.className='sheet-item'; d.textContent=`${sn} (${si.warehouse}шт)`; modal.appendChild(d); items.push(si.warehouse); }
+            });
+            if (items.length > 1) { const d = document.createElement('div'); d.className='sheet-total'; d.textContent=`Итого: ${formatNumber(items.reduce((a,b)=>a+b,0))}шт`; modal.appendChild(d); }
+        }
+
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'close-full-modal';
+        closeBtn.textContent = 'Закрыть';
+        closeBtn.addEventListener('click', () => { modal.classList.remove('show'); sheetsOverlay.classList.remove('show'); });
+        modal.appendChild(closeBtn);
+        document.body.appendChild(modal);
+    }
+    modal.classList.add('show');
+    sheetsOverlay.classList.add('show');
+}
+
+function exportToExcel() {
+    if (currentData.length === 0) { alert('Нет данных для экспорта'); return; }
+    try {
+        if (isSplitMode) {
+            // Режим "Разбить" - один столбец РЦ в конце, номенклатура может повторяться
+            const splitRows = getSplitData(currentData);
+            
+            const headers = [
+                'Номенклатура',
+                'Отштамповано всего',
+                'Склад всего',
+                'Тоннаж (Штамповка)',
+                'Деньги (Штамповка)',
+                'Тоннаж (Склад)',
+                'Деньги (Склад)',
+                'Количество листов',
+                'Листы со штамповкой',
+                'Листы со сдачей на склад',
+                'Рабочий центр'
+            ];
+            const exportData = [headers];
+            
+            splitRows.forEach(item => {
+                const sorted = [...item.sheetsArray].sort();
+                const sSheets = [];
+                const wSheets = [];
+                sorted.forEach(sn => {
+                    const si = item.sheetsData[sn];
+                    if (si) {
+                        if (si.stamping !== 0) sSheets.push(sn);
+                        if (si.warehouse !== 0) wSheets.push(sn);
+                    }
+                });
+                exportData.push([
+                    item.name,
+                    item.total,
+                    item.warehouse,
+                    item.tonnageP,
+                    item.moneyQ,
+                    item.tonnage,
+                    item.money,
+                    item.sheetCount,
+                    sSheets.join('; '),
+                    wSheets.join('; '),
+                    item.workingCenter
+                ]);
+            });
+            
+            const tQ = splitRows.reduce((s,i) => s+i.total, 0);
+            const tW = splitRows.reduce((s,i) => s+i.warehouse, 0);
+            const tTP = splitRows.reduce((s,i) => s+i.tonnageP, 0);
+            const tMQ = splitRows.reduce((s,i) => s+i.moneyQ, 0);
+            const tT = splitRows.reduce((s,i) => s+i.tonnage, 0);
+            const tM = splitRows.reduce((s,i) => s+i.money, 0);
+            exportData.push(['ИТОГО', tQ, tW, tTP, tMQ, tT, tM, '', '', '', '']);
+            
+            const ws = XLSX.utils.aoa_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Отчет');
+            XLSX.writeFile(wb, `отчет_штамповка_разбивка_${new Date().toISOString().slice(0,10)}.xlsx`);
+        } else {
+            // Обычный режим - несколько столбцов РЦ в конце
+            let maxCenters = 1;
+            currentData.forEach(item => {
+                if (item.workingCenter) {
+                    const centers = item.workingCenter.split(';').map(c => c.trim()).filter(c => c);
+                    if (centers.length > maxCenters) maxCenters = centers.length;
+                }
+            });
+            
+            const headers = [
+                'Номенклатура',
+                'Отштамповано всего',
+                'Склад всего',
+                'Тоннаж (Штамповка)',
+                'Деньги (Штамповка)',
+                'Тоннаж (Склад)',
+                'Деньги (Склад)',
+                'Количество листов',
+                'Листы со штамповкой',
+                'Листы со сдачей на склад'
+            ];
+            for (let i = 1; i <= maxCenters; i++) {
+                headers.push(i === 1 ? 'Рабочий центр' : `Рабочий центр ${i}`);
+            }
+            const exportData = [headers];
+            
+            currentData.forEach(item => {
+                const sorted = [...item.sheetsArray].sort();
+                const sSheets = [];
+                const wSheets = [];
+                sorted.forEach(sn => {
+                    const si = item.sheetsData[sn];
+                    if (si) {
+                        if (si.stamping !== 0) sSheets.push(sn);
+                        if (si.warehouse !== 0) wSheets.push(sn);
+                    }
+                });
+                const row = [
+                    item.name,
+                    item.total,
+                    item.warehouse,
+                    item.tonnageP,
+                    item.moneyQ,
+                    item.tonnage,
+                    item.money,
+                    item.sheetCount,
+                    sSheets.join('; '),
+                    wSheets.join('; ')
+                ];
+                if (item.workingCenter) {
+                    const centers = item.workingCenter.split(';').map(c => c.trim()).filter(c => c);
+                    for (let i = 0; i < maxCenters; i++) row.push(centers[i] || '');
+                } else {
+                    for (let i = 0; i < maxCenters; i++) row.push('');
+                }
+                exportData.push(row);
+            });
+            
+            const tQ = currentData.reduce((s,i) => s+i.total, 0);
+            const tW = currentData.reduce((s,i) => s+i.warehouse, 0);
+            const tTP = currentData.reduce((s,i) => s+i.tonnageP, 0);
+            const tMQ = currentData.reduce((s,i) => s+i.moneyQ, 0);
+            const tT = currentData.reduce((s,i) => s+i.tonnage, 0);
+            const tM = currentData.reduce((s,i) => s+i.money, 0);
+            const tRow = ['ИТОГО', tQ, tW, tTP, tMQ, tT, tM, '', '', ''];
+            for (let i = 0; i < maxCenters; i++) tRow.push('');
+            exportData.push(tRow);
+            
+            const ws = XLSX.utils.aoa_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Отчет');
+            XLSX.writeFile(wb, `отчет_штамповка_${new Date().toISOString().slice(0,10)}.xlsx`);
+        }
+    } catch (err) { alert('Ошибка при экспорте: ' + err.message); }
+}
+
+function formatNumber(num) {
+    return num % 1 === 0 ? num.toLocaleString('ru-RU') : num.toLocaleString('ru-RU', { minimumFractionDigits:2, maximumFractionDigits:2 });
+}
+function formatMoney(num) {
+    return num.toLocaleString('ru-RU', { minimumFractionDigits:2, maximumFractionDigits:2 });
+}
+function showError(msg) { error.textContent = msg; error.style.display = 'block'; }
+
+document.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); if (e.dataTransfer.types.includes('Files')) uploadHeaderBtn.style.backgroundColor = '#2e7d32'; });
+document.addEventListener('dragleave', e => { e.preventDefault(); e.stopPropagation(); if (!e.relatedTarget || !e.currentTarget.contains(e.relatedTarget)) uploadHeaderBtn.style.backgroundColor = ''; });
+document.addEventListener('drop', e => {
+    e.preventDefault(); e.stopPropagation();
+    uploadHeaderBtn.style.backgroundColor = '';
+    if (e.dataTransfer.files.length > 0) {
+        const file = e.dataTransfer.files[0];
+        if (file.name.match(/\.(xlsx|xls)$/)) {
+            uploadHeaderBtn.textContent = 'Выбрать другой файл';
+            fileName.textContent = `Загружен файл: ${file.name}`;
+            fileName.style.display = 'block';
+            processFile(file);
+        } else { showError('Пожалуйста, выберите Excel файл (.xlsx или .xls)'); }
+    }
+});
+sheetsOverlay.addEventListener('click', function() {
+    document.querySelectorAll('.full-sheets-modal.show').forEach(m => m.classList.remove('show'));
+    this.classList.remove('show');
+});
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.full-sheets-modal.show').forEach(m => m.classList.remove('show'));
+        sheetsOverlay.classList.remove('show');
+        closeAllFilterDropdowns();
+    }
+});
+});
+</script>
+</body>
+</html>
